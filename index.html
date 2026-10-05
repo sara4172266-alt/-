@@ -195,7 +195,7 @@ button { cursor: pointer; }
 .readonly .pay, .readonly .write-only { display: none !important; }
 
 /* patients */
-.pts .tr { grid-template-columns: minmax(0, 1fr) 90px 110px 110px; cursor: pointer; padding-inline: 8px; margin-inline: -8px; border-radius: 8px; }
+.pts .tr { grid-template-columns: minmax(0, 1fr) 110px 100px 110px 120px; cursor: pointer; padding-inline: 8px; margin-inline: -8px; border-radius: 8px; }
 .pts .tr:not(.th):hover { background: var(--surface-2); }
 .pts .tr.archived { opacity: .55; }
 .pts .c { text-align: left; font-family: var(--f-num); font-variant-numeric: tabular-nums; }
@@ -203,7 +203,55 @@ button { cursor: pointer; }
   .pts .tr { grid-template-columns: minmax(0, 1fr) auto; }
   .pts .th { display: none; }
   .pts .c.hide-sm { display: none; }
+  .pts .show-sm { display: block; }
+  .pts .pn { display: grid; }
 }
+
+/* calendar */
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pick { min-width: 200px; flex: 0 1 260px; }
+.pick select, .pick input { padding-block: 7px; }
+.pf { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; background: var(--accent-soft); border-radius: 12px; padding: 10px 14px; }
+.pf > div { flex: 1; min-width: 180px; display: grid; }
+.pf .sub { color: var(--ink-2); }
+.legend-row { display: flex; gap: 6px 18px; flex-wrap: wrap; }
+.legend-row .st { font-size: .85rem; font-weight: 600; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.cal .wd { background: var(--surface-2); color: var(--ink-2); font-size: .82rem; font-weight: 700; text-align: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.cal .day { min-height: 108px; padding: 6px; display: flex; flex-direction: column; gap: 3px; border-top: 1px solid var(--line); border-inline-start: 1px solid var(--line); cursor: pointer; min-width: 0; }
+.cal .wd + .day, .cal .day:nth-child(7n + 1) { border-inline-start: 0; }
+.cal .wd ~ .day:nth-child(-n + 14) { border-top: 0; }
+.cal .day:hover { background: var(--surface-2); }
+.cal .day.out { background: var(--surface-2); cursor: default; opacity: .5; }
+.cal .day.sel { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.cal .day.sat .dn { color: var(--muted); }
+.cal .dn { font-family: var(--f-num); font-size: .9rem; font-weight: 500; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; }
+.cal .today .dn { background: var(--accent); color: var(--accent-ink); }
+.ev { display: block; font-size: .8rem; font-weight: 600; line-height: 1.35; padding: 2px 7px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-inline-end: 5px; vertical-align: middle; }
+.ev:hover { filter: brightness(.96); text-decoration: underline; }
+.ev.paid { background: var(--good-soft); color: var(--good); }
+.ev.due, .ev.part { background: var(--bad-soft); color: var(--bad); }
+.ev.future { background: var(--surface-2); color: var(--ink-2); }
+.ev.none { background: transparent; color: var(--muted); text-decoration: line-through; }
+.cal .more { font-size: .78rem; color: var(--muted); padding-inline: 6px; }
+.cal .dots { display: none; }
+.cal .dots i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+.dots i.paid { background: var(--good); } .dots i.due, .dots i.part { background: var(--bad); } .dots i.future { background: var(--muted); } .dots i.none { background: transparent; border: 1px solid var(--muted); }
+.daypanel { border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; display: grid; gap: 6px; }
+.daypanel .panel-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.daypanel h3 { font-size: 1.05rem; }
+@media (max-width: 700px) {
+  .cal .day { min-height: 58px; padding: 4px; align-items: center; }
+  .cal .ev, .cal .more { display: none; }
+  .cal .dots { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
+  .pick { flex: 1 1 100%; }
+}
+.pts .tr.tfoot { border-top: 2px solid var(--line); font-weight: 700; cursor: default; }
+.pts .tr.tfoot:hover { background: none; }
+.cnt { display: inline-grid; place-items: center; min-width: 28px; height: 24px; padding-inline: 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.cnt.zero { background: none; color: var(--muted); }
+.show-sm { display: none; }
 
 /* forms */
 .form { display: grid; gap: 14px; }
@@ -323,8 +371,9 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     settings: { clinicName: "", defaultPrice: 400 },
     patients: new Map(), sessions: new Map(),
     month: ymOf(todayISO()), tab: "dash", filter: "all",
+    sview: "cal", patientFilter: "", selDay: "", pSearch: "", pFilter: "active",
   };
-  try { const t = localStorage.getItem("gvia-tab"); if (t) S.tab = t; } catch (e) { /* storage unavailable */ }
+  try { const t = localStorage.getItem("gvia-tab"); if (t) S.tab = t; const sv = localStorage.getItem("gvia-sview"); if (sv) S.sview = sv; } catch (e) { /* storage unavailable */ }
 
   const charge = (s) => (s.status === "free" ? 0 : Number(s.price) || 0);
   const paidOf = (s) => (s.payments || []).reduce((a, p) => a + (Number(p.amount) || 0), 0);
@@ -394,6 +443,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     $("#m-label").textContent = monthName(S.month);
     $$(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === S.tab)));
     const v = $("#view");
+    const focusId = document.activeElement && v.contains(document.activeElement) ? document.activeElement.id : "";
     if (S.noDb) { v.innerHTML = '<div class="card"><div class="empty"><b>הנתונים לא זמינים כאן</b><span>פתחי את הדף מתוך claude.ai כשאת מחוברת לחשבון, כדי לראות ולשמור את נתוני הגבייה.</span></div></div>'; return; }
     if (!S.ready) { v.innerHTML = '<div class="card"><div class="empty">טוען את הנתונים…</div></div>'; return; }
     if (S.tab === "dash") v.innerHTML = viewDash();
@@ -401,6 +451,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     else if (S.tab === "patients") v.innerHTML = viewPatients();
     else v.innerHTML = viewSettings();
     if (S.tab === "dash") wireChart();
+    if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); if (el.setSelectionRange && el.type === "search") el.setSelectionRange(el.value.length, el.value.length); } }
   }
 
   function monthStats(ym) {
@@ -553,48 +604,141 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     return h + "</div>";
   }
 
+  function sessionFilterMatch(s) {
+    if (S.patientFilter && s.patientId !== S.patientFilter) return false;
+    if (S.filter === "due") return balOf(s) > 0;
+    if (S.filter === "paid") return balOf(s) <= 0;
+    return true;
+  }
+
+  function patientSelectHTML() {
+    const ps = Array.from(S.patients.values()).sort((a, b) => (a.active === b.active ? a.name.localeCompare(b.name, "he") : a.active ? -1 : 1));
+    return '<div class="field pick"><label for="s-patient" class="vh">סינון לפי מטופלת</label><select id="s-patient"><option value="">כל המטופלות</option>' +
+      ps.map((p) => '<option value="' + esc(p.id) + '"' + (p.id === S.patientFilter ? " selected" : "") + ">" + esc(p.name) + (p.active ? "" : " (בארכיון)") + "</option>").join("") + "</select></div>";
+  }
+
   function viewSessions() {
-    let list = Array.from(S.sessions.values()).filter((s) => ymOf(s.date) === S.month);
-    const due = list.filter((s) => balOf(s) > 0);
-    const counts = { all: list.length, due: due.length, paid: list.length - due.length };
-    if (S.filter === "due") list = due;
-    if (S.filter === "paid") list = list.filter((s) => balOf(s) <= 0);
-    list.sort(byDateDesc);
-    let h = '<section class="card"><div class="card-h"><h2>פגישות ' + esc(monthName(S.month)) + '</h2><span class="hint write-only">לחיצה על אשראי / מזומן / העברה מסמנת שהפגישה שולמה</span></div><div class="card-b" style="display:grid;gap:12px">' +
-      '<div class="toolbar"><div class="chips">' + fbtn("all", "הכל", counts.all) + fbtn("due", "ממתינות לתשלום", counts.due) + fbtn("paid", "שולמו", counts.paid) + "</div></div>";
-    if (!list.length) {
-      h += '<div class="empty"><span>' + (counts.all ? "אין פגישות שמתאימות לסינון." : "עדיין אין פגישות ב" + esc(monthName(S.month)) + ".") + '</span><button type="button" class="btn primary write-only" data-new-session="">' + icon("i-plus") + "הוספת פגישה</button></div>";
+    if (S.patientFilter && !S.patients.has(S.patientFilter)) S.patientFilter = "";
+    const base = Array.from(S.sessions.values()).filter((s) => ymOf(s.date) === S.month && (!S.patientFilter || s.patientId === S.patientFilter));
+    const dueN = base.filter((s) => balOf(s) > 0).length;
+    const counts = { all: base.length, due: dueN, paid: base.length - dueN };
+    const list = base.filter(sessionFilterMatch).sort(byDateDesc);
+
+    let h = '<section class="card"><div class="card-h"><h2>פגישות ' + esc(monthName(S.month)) + "</h2>" +
+      '<div class="chips" role="group" aria-label="תצוגה"><button type="button" data-sview="cal" aria-pressed="' + (S.sview === "cal") + '">לוח שנה</button><button type="button" data-sview="list" aria-pressed="' + (S.sview === "list") + '">רשימה</button></div></div>' +
+      '<div class="card-b" style="display:grid;gap:14px">' +
+      '<div class="toolbar">' + patientSelectHTML() + '<div class="chips">' + fbtn("all", "הכל", counts.all) + fbtn("due", "ממתינות לתשלום", counts.due) + fbtn("paid", "שולמו", counts.paid) + "</div></div>";
+
+    if (S.patientFilter) {
+      const sm = patientSummary(S.patientFilter);
+      h += '<div class="pf"><div><b>' + esc(patientName(S.patientFilter)) + "</b>" +
+        '<span class="sub">' + plural(sm.month, "פגישה אחת", "פגישות") + " ב" + esc(monthName(S.month, { month: "long" })) + " · " + plural(sm.count, "פגישה אחת", "פגישות") + " בסך הכל</span></div>" +
+        '<span class="amt' + (sm.total > 0 ? " bad" : "") + '">' + (sm.total > 0 ? "יתרה " + money(sm.total) : '<span class="st paid">אין חוב</span>') + "</span>" +
+        '<button type="button" class="btn small" data-open-patient="' + esc(S.patientFilter) + '">כרטיס מטופלת</button>' +
+        '<button type="button" class="btn small" id="clear-pf">הצגת כולן</button></div>';
+    }
+
+    if (S.sview === "cal") h += calendarHTML(list);
+    else if (!list.length) {
+      h += '<div class="empty"><span>' + (counts.all ? "אין פגישות שמתאימות לסינון." : "אין פגישות ב" + esc(monthName(S.month)) + (S.patientFilter ? " למטופלת הזו" : "") + ".") + '</span><button type="button" class="btn primary write-only" data-new-session="">' + icon("i-plus") + "הוספת פגישה</button></div>";
     } else {
-      h += '<div class="tbl sess"><div class="tr th"><span>תאריך</span><span>מטופלת</span><span style="text-align:left">סכום</span><span>מצב</span><span style="text-align:left" class="write-only">סימון תשלום</span></div>' + list.map((s) => sessionRow(s)).join("") + "</div>";
+      h += '<p class="note write-only">לחיצה על אשראי / מזומן / העברה מסמנת שהפגישה שולמה.</p>' +
+        '<div class="tbl sess"><div class="tr th"><span>תאריך</span><span>מטופלת</span><span style="text-align:left">סכום</span><span>מצב</span><span style="text-align:left" class="write-only">סימון תשלום</span></div>' + list.map((s) => sessionRow(s)).join("") + "</div>";
     }
     return h + "</div></section>";
   }
+
+  function calendarHTML(list) {
+    const [y, m] = S.month.split("-").map(Number);
+    const first = new Date(y, m - 1, 1).getDay(); // 0 = Sunday
+    const days = new Date(y, m, 0).getDate();
+    const today = todayISO();
+    if (!S.selDay || ymOf(S.selDay) !== S.month) S.selDay = ymOf(today) === S.month ? today : "";
+    const byDay = new Map();
+    list.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : patientName(a.patientId).localeCompare(patientName(b.patientId), "he"))).forEach((s) => {
+      if (!byDay.has(s.date)) byDay.set(s.date, []);
+      byDay.get(s.date).push(s);
+    });
+    let h = '<div class="legend-row"><span class="st paid">שולם</span><span class="st due">לא שולם</span><span class="st future">טרם התקיימה</span><span class="st none">ללא חיוב</span></div>';
+    h += '<div class="cal" role="grid">' + ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"].map((d) => '<div class="wd" role="columnheader">' + d + "</div>").join("");
+    for (let i = 0; i < first; i++) h += '<div class="day out" aria-hidden="true"></div>';
+    for (let d = 1; d <= days; d++) {
+      const iso = S.month + "-" + pad(d);
+      const evs = byDay.get(iso) || [];
+      const cls = "day" + (iso === today ? " today" : "") + (iso === S.selDay ? " sel" : "") + (new Date(y, m - 1, d).getDay() === 6 ? " sat" : "");
+      h += '<div class="' + cls + '" role="gridcell" tabindex="0" data-day="' + iso + '" aria-label="' + d + " ב" + esc(monthName(S.month, { month: "long" })) + (evs.length ? ", " + plural(evs.length, "פגישה אחת", "פגישות") : "") + '"><span class="dn">' + d + "</span>";
+      evs.slice(0, 3).forEach((s) => { const st = payState(s); h += '<span class="ev ' + st.cls + '" data-edit="' + esc(s.id) + '" title="' + esc(patientName(s.patientId)) + " · " + st.label + '">' + esc(patientName(s.patientId)) + "</span>"; });
+      if (evs.length > 3) h += '<span class="more">+' + (evs.length - 3) + " נוספות</span>";
+      if (evs.length) h += '<span class="dots">' + evs.map((s) => '<i class="' + payState(s).cls + '"></i>').join("") + "</span>";
+      h += "</div>";
+    }
+    const tail = (7 - ((first + days) % 7)) % 7;
+    for (let i = 0; i < tail; i++) h += '<div class="day out" aria-hidden="true"></div>';
+    h += "</div>";
+
+    // selected day panel
+    if (S.selDay) {
+      const evs = byDay.get(S.selDay) || [];
+      const [, mm, dd] = S.selDay.split("-").map(Number);
+      h += '<div class="daypanel"><div class="panel-h"><h3>' + esc(weekday(S.selDay)) + ", " + dd + " ב" + esc(monthName(S.month, { month: "long" })) + '</h3><button type="button" class="btn small write-only" data-new-day="' + S.selDay + '">' + icon("i-plus") + "פגישה ביום הזה</button></div>";
+      h += evs.length ? '<div class="tbl sess">' + evs.map((s) => sessionRow(s)).join("") + "</div>" : '<p class="note">אין פגישות ביום הזה.</p>';
+      h += "</div>";
+    } else h += '<p class="note">בחרי יום בלוח כדי לראות את הפגישות שלו ולסמן תשלומים.</p>';
+    return h;
+  }
+
   function fbtn(k, label, n) { return '<button type="button" data-filter="' + k + '" aria-pressed="' + (S.filter === k) + '">' + label + '<span class="n">' + n + "</span></button>"; }
 
   function patientSummary(pid) {
-    let total = 0, count = 0, last = "";
-    S.sessions.forEach((s) => { if (s.patientId !== pid) return; count++; if (!isFuture(s)) total += balOf(s); if (s.date > last) last = s.date; });
-    return { total, count, last };
+    let total = 0, count = 0, month = 0, last = "";
+    S.sessions.forEach((s) => {
+      if (s.patientId !== pid) return;
+      if (!isFuture(s)) total += balOf(s);
+      if (s.status === "free") return;
+      count++;
+      if (ymOf(s.date) === S.month) month++;
+      if (s.date > last && !isFuture(s)) last = s.date;
+    });
+    return { total, count, month, last };
   }
 
   function viewPatients() {
     const all = Array.from(S.patients.values()).sort((a, b) => (a.active === b.active ? a.name.localeCompare(b.name, "he") : a.active ? -1 : 1));
-    const active = all.filter((p) => p.active).length;
-    let h = '<section class="card"><div class="card-h"><h2>מטופלות</h2><span class="hint">' + plural(active, "מטופלת פעילה אחת", "מטופלות פעילות") + '</span></div><div class="card-b" style="display:grid;gap:12px">' +
-      '<div class="toolbar"><span class="grow"></span><button type="button" class="btn write-only" id="add-patient">' + icon("i-plus") + "מטופלת חדשה</button></div>";
+    const sums = new Map(all.map((p) => [p.id, patientSummary(p.id)]));
+    const counts = { active: all.filter((p) => p.active).length, debt: all.filter((p) => sums.get(p.id).total > 0).length, archived: all.filter((p) => !p.active).length, all: all.length };
+    let h = '<section class="card"><div class="card-h"><h2>מטופלות</h2><button type="button" class="btn small write-only" id="add-patient">' + icon("i-plus") + "מטופלת חדשה</button></div>" +
+      '<div class="card-b" style="display:grid;gap:14px">' +
+      '<div class="toolbar"><div class="field pick"><label for="p-search" class="vh">חיפוש מטופלת</label><input id="p-search" type="search" placeholder="חיפוש לפי שם…" value="' + esc(S.pSearch) + '" autocomplete="off"></div>' +
+      '<div class="chips">' + pbtn("active", "פעילות", counts.active) + pbtn("debt", "עם חוב", counts.debt) + pbtn("archived", "בארכיון", counts.archived) + pbtn("all", "הכל", counts.all) + "</div></div>";
     if (!all.length) h += '<div class="empty">עדיין לא נוספו מטופלות. הוסיפי את הראשונה כדי להתחיל לרשום פגישות.</div>';
-    else {
-      h += '<div class="tbl pts"><div class="tr th"><span>שם</span><span class="c">פגישות</span><span class="c">פגישה אחרונה</span><span class="c">יתרה לתשלום</span></div>';
-      all.forEach((p) => {
-        const sm = patientSummary(p.id);
-        h += '<div class="tr' + (p.active ? "" : " archived") + '" data-open-patient="' + esc(p.id) + '"><span><b>' + esc(p.name) + "</b>" + (p.active ? "" : ' <span class="sub">· בארכיון</span>') + "</span>" +
-          '<span class="c hide-sm">' + sm.count + "</span>" +
-          '<span class="c hide-sm">' + (sm.last ? fmtDate(sm.last) : "—") + "</span>" +
-          '<span class="c amt' + (sm.total > 0 ? " bad" : "") + '">' + (sm.total > 0 ? money(sm.total) : '<span class="st paid" style="font-family:var(--f-body)">אין חוב</span>') + "</span></div>";
-      });
-      h += "</div>";
-    }
+    else h += '<div id="pts-body">' + patientsTable(all, sums) + "</div>";
     return h + "</div></section>";
+  }
+  function pbtn(k, label, n) { return '<button type="button" data-pfilter="' + k + '" aria-pressed="' + (S.pFilter === k) + '">' + label + '<span class="n">' + n + "</span></button>"; }
+  function patientsTable(all, sums) {
+    const q = S.pSearch.trim();
+    const rows = all.filter((p) => {
+      if (q && !p.name.includes(q)) return false;
+      if (S.pFilter === "active") return p.active;
+      if (S.pFilter === "archived") return !p.active;
+      if (S.pFilter === "debt") return sums.get(p.id).total > 0;
+      return true;
+    });
+    if (!rows.length) return '<div class="empty">' + (q ? "לא נמצאה מטופלת בשם „" + esc(q) + "”." : "אין מטופלות בקבוצה הזו.") + "</div>";
+    const mname = esc(monthName(S.month, { month: "long" }));
+    let h = '<div class="tbl pts"><div class="tr th"><span>שם</span><span class="c">פגישות ב' + mname + '</span><span class="c">סה״כ פגישות</span><span class="c">פגישה אחרונה</span><span class="c">יתרה לתשלום</span></div>';
+    let tm = 0, tc = 0, tb = 0;
+    rows.forEach((p) => {
+      const sm = sums.get(p.id); tm += sm.month; tc += sm.count; tb += sm.total;
+      h += '<div class="tr' + (p.active ? "" : " archived") + '" data-open-patient="' + esc(p.id) + '"><span class="pn"><b>' + esc(p.name) + "</b>" + (p.active ? "" : ' <span class="sub">· בארכיון</span>') +
+        '<span class="sub show-sm">' + sm.month + " החודש · " + sm.count + " סה״כ</span></span>" +
+        '<span class="c hide-sm"><span class="cnt' + (sm.month ? "" : " zero") + '">' + sm.month + "</span></span>" +
+        '<span class="c hide-sm">' + sm.count + "</span>" +
+        '<span class="c hide-sm">' + (sm.last ? fmtDate(sm.last) : "—") + "</span>" +
+        '<span class="c amt' + (sm.total > 0 ? " bad" : "") + '">' + (sm.total > 0 ? money(sm.total) : '<span class="st paid" style="font-family:var(--f-body)">אין חוב</span>') + "</span></div>";
+    });
+    h += '<div class="tr tfoot"><span>סה״כ (' + plural(rows.length, "מטופלת אחת", "מטופלות") + ')</span><span class="c hide-sm">' + tm + '</span><span class="c hide-sm">' + tc + '</span><span class="c hide-sm"></span><span class="c amt' + (tb > 0 ? " bad" : "") + '">' + money(tb) + "</span></div>";
+    return h + "</div>";
   }
 
   function viewSettings() {
@@ -649,9 +793,9 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     return '<option value="">בחרי מטופלת…</option>' + ps.map((p) => '<option value="' + esc(p.id) + '"' + (p.id === selected ? " selected" : "") + ">" + esc(p.name) + "</option>").join("") + '<option value="__new">+ מטופלת חדשה…</option>';
   }
 
-  function openSession(sid, presetPatient) {
+  function openSession(sid, presetPatient, presetDate) {
     const existing = sid ? S.sessions.get(sid) : null;
-    const s = existing ? plain(existing) : { patientId: presetPatient || "", date: S.month === ymOf(todayISO()) ? todayISO() : S.month + "-01", price: Number(S.settings.defaultPrice) || 400, status: "held", note: "", payments: [] };
+    const s = existing ? plain(existing) : { patientId: presetPatient || "", date: presetDate || (S.month === ymOf(todayISO()) ? todayISO() : S.month + "-01"), price: Number(S.settings.defaultPrice) || 400, status: "held", note: "", payments: [] };
     const payments = (s.payments || []).slice();
     const ro = !S.canWrite;
     const html = dlgHead(existing ? "עריכת פגישה" : "פגישה חדשה") +
@@ -767,12 +911,13 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const html = dlgHead(esc(p.name)) +
       '<div class="mini"><div class="' + (sm.total > 0 ? "bad" : "good") + '"><span class="lbl">יתרה לתשלום</span><b>' + money(sm.total) + '</b></div><div><span class="lbl">שולם עד היום</span><b>' + money(paidTotal) + '</b></div><div><span class="lbl">פגישות</span><b>' + sm.count + "</b></div></div>" +
       (p.phone || p.note ? '<p class="note">' + (p.phone ? 'טלפון: <span dir="ltr" class="num" style="user-select:all">' + esc(p.phone) + "</span>" : "") + (p.phone && p.note ? " · " : "") + esc(p.note || "") + "</p>" : "") +
-      '<div class="toolbar write-only"><button type="button" class="btn primary" id="pp-new">' + icon("i-plus") + "פגישה</button>" + (sm.total > 0 ? '<button type="button" class="btn" id="pp-pay">רישום תשלום</button>' : "") + '<span class="grow"></span><button type="button" class="btn" id="pp-edit">עריכת פרטים</button></div>' +
+      '<div class="toolbar write-only"><button type="button" class="btn primary" id="pp-new">' + icon("i-plus") + "פגישה</button>" + (sm.total > 0 ? '<button type="button" class="btn" id="pp-pay">רישום תשלום</button>' : "") + '<button type="button" class="btn" id="pp-cal">הצגה בלוח הפגישות</button><span class="grow"></span><button type="button" class="btn" id="pp-edit">עריכת פרטים</button></div>' +
       '<div class="tbl sess" id="pp-rows">' + (list.length ? list.map((s) => sessionRow(s, { noName: true })).join("") : '<div class="empty">עדיין אין פגישות למטופלת הזו.</div>') + "</div>";
     openDlg(html, () => {
       const n = $("#pp-new"); if (n) n.addEventListener("click", () => openSession(null, pid));
       const pay = $("#pp-pay"); if (pay) pay.addEventListener("click", () => openPayPatient(pid));
       const ed = $("#pp-edit"); if (ed) ed.addEventListener("click", () => openPatientEdit(pid));
+      const pc = $("#pp-cal"); if (pc) pc.addEventListener("click", () => { closeDlg(); S.patientFilter = pid; S.tab = "sessions"; S.filter = "all"; render(); });
     });
   }
 
@@ -848,7 +993,12 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const pp = t.closest("[data-pay-patient]"); if (pp) { openPayPatient(pp.dataset.payPatient); return; }
     const op = t.closest("[data-open-patient]"); if (op) { openPatient(op.dataset.openPatient); return; }
     const ed = t.closest("[data-edit]"); if (ed) { openSession(ed.dataset.edit); return; }
+    const nd = t.closest("[data-new-day]"); if (nd) { openSession(null, S.patientFilter, nd.dataset.newDay); return; }
+    const dy = t.closest("[data-day]"); if (dy) { S.selDay = dy.dataset.day; render(); return; }
     const f = t.closest("[data-filter]"); if (f) { S.filter = f.dataset.filter; render(); return; }
+    const pf = t.closest("[data-pfilter]"); if (pf) { S.pFilter = pf.dataset.pfilter; render(); return; }
+    const sv = t.closest("[data-sview]"); if (sv) { S.sview = sv.dataset.sview; try { localStorage.setItem("gvia-sview", S.sview); } catch (err) { /* ignore */ } render(); return; }
+    if (t.closest("#clear-pf")) { S.patientFilter = ""; render(); return; }
     if (t.closest("[data-new-session]")) { openSession(null); return; }
     if (t.closest("#add-patient")) { openPatientEdit(null); return; }
     if (t.closest("#exp-payments")) { doExport("payments"); return; }
@@ -868,6 +1018,19 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
         toast("נתוני הדוגמה נמחקו");
       } catch (err) { /* reported */ }
     }
+  });
+  $("#view").addEventListener("change", (e) => {
+    if (e.target.id === "s-patient") { S.patientFilter = e.target.value; render(); }
+  });
+  $("#view").addEventListener("input", (e) => {
+    if (e.target.id !== "p-search") return;
+    S.pSearch = e.target.value;
+    const all = Array.from(S.patients.values()).sort((a, b) => (a.active === b.active ? a.name.localeCompare(b.name, "he") : a.active ? -1 : 1));
+    const box = $("#pts-body"); if (box) box.innerHTML = patientsTable(all, new Map(all.map((p) => [p.id, patientSummary(p.id)])));
+  });
+  $("#view").addEventListener("keydown", (e) => {
+    const d = e.target.closest && e.target.closest("[data-day]");
+    if (d && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); S.selDay = d.dataset.day; render(); const el = $('[data-day="' + S.selDay + '"]'); if (el) el.focus(); }
   });
   // actions inside the patient dialog's session list
   body.addEventListener("click", (e) => {
