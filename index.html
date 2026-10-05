@@ -1,0 +1,891 @@
+<title>יומן גבייה לקליניקה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700&family=Rubik:wght@400;500;600&display=swap">
+<style>
+/* Layout: a calm ledger — month bar on top, summary tiles, then the actionable list (debts / sessions); one column on phones. */
+:root {
+  --bg: #f5f4f8;
+  --surface: #ffffff;
+  --surface-2: #efedf4;
+  --ink: #1d1a24;
+  --ink-2: #57525f;
+  --muted: #858091;
+  --line: #e3e0ea;
+  --accent: #5d3a7a;
+  --accent-ink: #ffffff;
+  --accent-soft: #ece4f3;
+  --good: #1f7a4a;
+  --good-soft: #e1f2e7;
+  --bad: #b4352c;
+  --bad-soft: #fbe6e3;
+  --warn: #8f5a00;
+  --warn-soft: #faefd6;
+  --m-credit: #2a78d6;
+  --m-cash: #eb6834;
+  --m-transfer: #1baf7a;
+  --shadow: 0 1px 2px rgba(40, 25, 60, .06), 0 4px 14px rgba(40, 25, 60, .05);
+  --f-display: "Frank Ruhl Libre", "David", "Times New Roman", serif;
+  --f-body: "Assistant", "Arial Hebrew", Arial, sans-serif;
+  --f-num: "Rubik", "Assistant", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16141b; --surface: #201d27; --surface-2: #2a2633; --ink: #f1eef6; --ink-2: #bdb6c9; --muted: #8f889c; --line: #363042;
+    --accent: #b997e0; --accent-ink: #1a1420; --accent-soft: #3a2f4a;
+    --good: #62cf92; --good-soft: #1b3326; --bad: #f08c82; --bad-soft: #3e2120; --warn: #e8b552; --warn-soft: #3a2e15;
+    --m-credit: #3987e5; --m-cash: #d95926; --m-transfer: #199e70;
+    --shadow: 0 1px 2px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16141b; --surface: #201d27; --surface-2: #2a2633; --ink: #f1eef6; --ink-2: #bdb6c9; --muted: #8f889c; --line: #363042;
+  --accent: #b997e0; --accent-ink: #1a1420; --accent-soft: #3a2f4a;
+  --good: #62cf92; --good-soft: #1b3326; --bad: #f08c82; --bad-soft: #3e2120; --warn: #e8b552; --warn-soft: #3a2e15;
+  --m-credit: #3987e5; --m-cash: #d95926; --m-transfer: #199e70;
+  --shadow: 0 1px 2px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
+.app { max-width: 1080px; margin: 0 auto; padding: 0 16px; padding-block: 16px 64px; display: grid; gap: 20px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+.brand { display: grid; gap: 0; min-width: 0; }
+.brand h1 { font-family: var(--f-display); font-weight: 700; font-size: 1.75rem; line-height: 1.15; }
+.brand p { margin: 0; color: var(--muted); font-size: .9rem; }
+.month { display: flex; align-items: center; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
+.month button { border: 0; background: transparent; width: 34px; height: 34px; border-radius: 50%; font-size: 1.2rem; line-height: 1; color: var(--ink-2); }
+.month button:hover { background: var(--surface-2); }
+.month b { min-width: 118px; text-align: center; font-weight: 700; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--bad); }
+.btn.small { padding: 4px 10px; font-size: .9rem; border-radius: 8px; }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* tabs */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--ink-2); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* tiles */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 2px; box-shadow: var(--shadow); }
+.tile .lbl { color: var(--ink-2); font-size: .9rem; font-weight: 600; letter-spacing: .01em; }
+.tile .val { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
+.tile .sub { color: var(--muted); font-size: .85rem; }
+.tile.bad .val { color: var(--bad); }
+.tile.good .val { color: var(--good); }
+@media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile .val { font-size: 1.4rem; } }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.panel-h h2 { font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; }
+.panel-h .hint { color: var(--muted); font-size: .85rem; }
+.empty { color: var(--muted); text-align: center; padding: 20px 8px; border: 1px dashed var(--line); border-radius: 12px; display: grid; gap: 8px; justify-items: center; }
+
+/* debts */
+.debt { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.debt:first-child { border-top: 0; }
+.debt .who { font-weight: 700; cursor: pointer; }
+.debt .who:hover { text-decoration: underline; }
+.debt .meta { color: var(--muted); font-size: .85rem; grid-column: 1; }
+.debt .amt { color: var(--bad); font-weight: 600; font-family: var(--f-num); font-variant-numeric: tabular-nums; grid-row: 1 / span 2; grid-column: 2; }
+.debt .btn { grid-row: 1 / span 2; grid-column: 3; }
+
+/* method breakdown */
+.stackbar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+.stackbar span { display: block; height: 100%; }
+.legend { display: grid; gap: 6px; }
+.legend div { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; }
+.legend .pct { color: var(--muted); font-size: .85rem; min-width: 3.2em; text-align: left; }
+
+/* chart */
+.chart { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--ink-2); font-family: var(--f-num); font-size: 12px; }
+.chart .tot { fill: var(--ink); font-weight: 500; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .hit { fill: transparent; }
+.chart .hit:hover, .chart .hit.on { fill: var(--surface-2); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: .85rem; line-height: 1.4; min-width: 150px; transform: translate(50%, -100%); white-space: nowrap; z-index: 2; }
+.tip .r { display: flex; justify-content: space-between; gap: 12px; }
+
+/* pills & chips */
+.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 1px 10px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.paid { background: var(--good-soft); color: var(--good); }
+.pill.part { background: var(--warn-soft); color: var(--warn); }
+.pill.due { background: var(--bad-soft); color: var(--bad); }
+.pill.none, .pill.future { background: var(--surface-2); color: var(--ink-2); }
+.mchip { display: inline-flex; align-items: center; gap: 5px; font-size: .85rem; color: var(--ink-2); white-space: nowrap; }
+.mchip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+/* filters */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.filters button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: .9rem; font-weight: 600; color: var(--ink-2); }
+.filters button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.filters .spacer { flex: 1; }
+
+/* session rows */
+.rows { display: grid; }
+.row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 4px; border-top: 1px solid var(--line); cursor: pointer; border-radius: 8px; }
+.row:first-child { border-top: 0; }
+.row:hover { background: var(--surface-2); }
+.row .d { text-align: center; line-height: 1.1; grid-row: 1 / span 2; }
+.row .d b { display: block; font-family: var(--f-num); font-size: 1.3rem; font-weight: 500; }
+.row .d span { font-size: .75rem; color: var(--muted); }
+.row .nm { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.row .sub { color: var(--muted); font-size: .85rem; min-width: 0; overflow-wrap: anywhere; display: flex; gap: 4px 10px; flex-wrap: wrap; align-items: center; }
+.row .amt { text-align: left; font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 500; }
+.row .act { grid-column: 3; display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
+.qp { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 3px 8px; font-size: .82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
+.qp:hover { background: var(--surface-2); }
+.qp i { width: 8px; height: 8px; border-radius: 2px; }
+.readonly .qp, .readonly .write-only { display: none !important; }
+
+/* patients */
+.plist { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 6px; cursor: pointer; text-align: right; }
+.pcard:hover { border-color: var(--accent); }
+.pcard h3 { font-size: 1.1rem; font-weight: 700; font-family: var(--f-body); overflow-wrap: anywhere; }
+.pcard .kv { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-2); font-size: .9rem; }
+.pcard .kv b { font-family: var(--f-num); font-weight: 500; color: var(--ink); }
+.pcard .kv b.bad { color: var(--bad); }
+.pcard.archived { opacity: .6; }
+
+/* settings */
+.form { display: grid; gap: 12px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field label, .field .lab { font-weight: 600; font-size: .9rem; color: var(--ink-2); }
+.field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 10px; width: 100%; min-width: 0; }
+.field textarea { min-height: 64px; resize: vertical; }
+.fr { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.seg button i { width: 10px; height: 10px; border-radius: 3px; }
+.note { color: var(--muted); font-size: .88rem; margin: 0; }
+.banner { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 14px; font-weight: 600; }
+
+/* dialog */
+dialog { border: 0; border-radius: 16px; padding: 0; width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 32px); background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+dialog::backdrop { background: rgba(20, 12, 30, .45); }
+.dlg { display: grid; gap: 14px; padding: 18px; }
+.dlg-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.dlg-h h2 { font-family: var(--f-display); font-size: 1.3rem; }
+.dlg-h .x { border: 0; background: none; font-size: 1.4rem; line-height: 1; color: var(--muted); }
+.dlg-f { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
+.dlg-f .end { display: flex; gap: 8px; margin-inline-start: auto; }
+.section { display: grid; gap: 10px; background: var(--surface-2); border-radius: 12px; padding: 12px; }
+.section h3 { font-size: 1rem; }
+.paylist { display: grid; gap: 6px; }
+.payrow { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 8px; padding: 6px 10px; flex-wrap: wrap; }
+.payrow .grow { flex: 1; min-width: 0; color: var(--muted); font-size: .85rem; }
+.confirm { background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-weight: 600; }
+
+/* toast */
+.toast { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; display: flex; gap: 14px; align-items: center; z-index: 10; box-shadow: var(--shadow); max-width: calc(100vw - 32px); }
+.toast button { border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .brand h1 { font-size: 1.4rem; }
+  .row { grid-template-columns: 44px minmax(0, 1fr) auto; }
+  .row .act { grid-column: 2 / span 2; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tile, .panel, .pcard { transition: border-color .15s; }
+}
+</style>
+
+<div class="app" id="app" dir="rtl" lang="he">
+  <header class="top">
+    <div class="brand">
+      <h1 id="clinic-name">יומן גבייה</h1>
+      <p id="today-line"></p>
+    </div>
+    <div class="month" role="group" aria-label="בחירת חודש">
+      <button type="button" id="m-prev" aria-label="החודש הקודם">›</button>
+      <b id="m-label"></b>
+      <button type="button" id="m-next" aria-label="החודש הבא">‹</button>
+    </div>
+    <button type="button" class="btn primary write-only" id="add-session">+ פגישה חדשה</button>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" data-tab="dash" aria-selected="true">לוח בקרה</button>
+    <button type="button" role="tab" data-tab="sessions" aria-selected="false">פגישות החודש</button>
+    <button type="button" role="tab" data-tab="patients" aria-selected="false">מטופלות</button>
+    <button type="button" role="tab" data-tab="settings" aria-selected="false">הגדרות וייצוא</button>
+  </nav>
+
+  <main id="view"></main>
+</div>
+
+<dialog id="dlg"><div class="dlg" id="dlg-body" dir="rtl" lang="he"></div></dialog>
+<div class="toast" id="toast" hidden dir="rtl"><span id="toast-msg"></span><button type="button" id="toast-undo" hidden>ביטול</button></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- constants & helpers ----------
+  const METHODS = {
+    credit: { label: "אשראי", color: "var(--m-credit)" },
+    cash: { label: "מזומן", color: "var(--m-cash)" },
+    transfer: { label: "העברה בנקאית", color: "var(--m-transfer)", short: "העברה" },
+  };
+  const METHOD_KEYS = ["credit", "cash", "transfer"];
+  const STATUS = {
+    held: "התקיימה",
+    late: "בוטלה – בחיוב",
+    free: "בוטלה – ללא חיוב",
+  };
+  const nis = new Intl.NumberFormat("he-IL", { maximumFractionDigits: 0 });
+  const money = (n) => nis.format(Math.round(n || 0)) + " ₪";
+  const pad = (n) => String(n).padStart(2, "0");
+  const isoDate = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const todayISO = () => isoDate(new Date());
+  const ymOf = (iso) => iso.slice(0, 7);
+  const addMonths = (ym, k) => { const [y, m] = ym.split("-").map(Number); const d = new Date(y, m - 1 + k, 1); return d.getFullYear() + "-" + pad(d.getMonth() + 1); };
+  const monthName = (ym, opts) => { const [y, m] = ym.split("-").map(Number); return new Intl.DateTimeFormat("he-IL", opts || { month: "long", year: "numeric" }).format(new Date(y, m - 1, 1)); };
+  const dayParts = (iso) => { const [y, m, d] = iso.split("-").map(Number); const dt = new Date(y, m - 1, d); return { day: d, wd: new Intl.DateTimeFormat("he-IL", { weekday: "short" }).format(dt) }; };
+  const fmtDate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return d + "/" + m + "/" + y; };
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+
+  // ---------- state ----------
+  const S = {
+    db: null, downloads: null, canWrite: true, ready: false, noDb: false,
+    settings: { clinicName: "", defaultPrice: 400 },
+    patients: new Map(), sessions: new Map(),
+    month: ymOf(todayISO()), tab: "dash", filter: "all",
+  };
+  try { const t = localStorage.getItem("gvia-tab"); if (t) S.tab = t; } catch (e) { /* storage unavailable */ }
+
+  const charge = (s) => (s.status === "free" ? 0 : Number(s.price) || 0);
+  const paidOf = (s) => (s.payments || []).reduce((a, p) => a + (Number(p.amount) || 0), 0);
+  const balOf = (s) => Math.max(0, charge(s) - paidOf(s));
+  const isFuture = (s) => s.date > todayISO();
+  const patientName = (id) => { const p = S.patients.get(id); return p ? p.name : "מטופלת שנמחקה"; };
+  const sortedSessions = () => Array.from(S.sessions.values()).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+
+  function payState(s) {
+    if (s.status === "free") return { cls: "none", label: "ללא חיוב" };
+    const paid = paidOf(s), c = charge(s);
+    if (c > 0 && paid >= c) return { cls: "paid", label: "שולם" };
+    if (paid > 0) return { cls: "part", label: "שולם חלקית" };
+    if (isFuture(s)) return { cls: "future", label: "עתידית" };
+    return { cls: "due", label: "לא שולם" };
+  }
+
+  // ---------- writes (one at a time per document) ----------
+  const chains = new Map();
+  function queueWrite(path, fn) {
+    const prev = chains.get(path) || Promise.resolve();
+    const next = prev.catch(() => {}).then(fn);
+    chains.set(path, next);
+    return next;
+  }
+  function writeErr(e) {
+    const code = e && e.code;
+    if (code === "invalid_argument") { S.canWrite = false; applyWriteMode(); toast("אין לך הרשאת עריכה בדף הזה. רק בעלת הדף ועורכות יכולות לשמור."); }
+    else if (code === "quota_exceeded") toast("מקום האחסון מלא. מחקי נתונים ישנים ונסי שוב.");
+    else toast("השמירה לא הצליחה. בדקי את החיבור לאינטרנט ונסי שוב.");
+    throw e;
+  }
+  function setDoc(col, id, data) { return queueWrite(col + "/" + id, () => S.db.collection(col).doc(id).set(data)).catch(writeErr); }
+  function updDoc(col, id, data) { return queueWrite(col + "/" + id, () => S.db.collection(col).doc(id).update(data)).catch(writeErr); }
+  function delDoc(col, id) { return queueWrite(col + "/" + id, () => S.db.collection(col).doc(id).delete()).catch(writeErr); }
+  function newId(col) { return S.db.collection(col).doc().id; }
+  function plain(s) { const o = Object.assign({}, s); delete o.id; o.payments = (s.payments || []).map((p) => Object.assign({}, p)); return o; }
+
+  // ---------- toast ----------
+  let toastTimer = null;
+  function toast(msg, undo) {
+    const t = $("#toast"), u = $("#toast-undo");
+    $("#toast-msg").textContent = msg;
+    u.hidden = !undo;
+    u.onclick = undo ? () => { t.hidden = true; undo(); } : null;
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, undo ? 6000 : 3500);
+  }
+
+  // ---------- quick pay ----------
+  function quickPay(sid, method) {
+    const s = S.sessions.get(sid); if (!s) return;
+    const amount = balOf(s); if (amount <= 0) return;
+    const before = (s.payments || []).map((p) => Object.assign({}, p));
+    const payments = before.concat([{ amount, method, date: todayISO(), receipt: "" }]);
+    updDoc("sessions", sid, { payments }).then(() => {
+      toast("נרשם תשלום של " + money(amount) + " ב" + METHODS[method].label + " – " + patientName(s.patientId), () => updDoc("sessions", sid, { payments: before }));
+    }, () => {});
+  }
+
+  // ---------- render ----------
+  function render() {
+    $("#clinic-name").textContent = S.settings.clinicName ? S.settings.clinicName : "יומן גבייה";
+    $("#today-line").textContent = "היום " + new Intl.DateTimeFormat("he-IL", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
+    $("#m-label").textContent = monthName(S.month);
+    $$(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === S.tab)));
+    const v = $("#view");
+    if (S.noDb) { v.innerHTML = '<div class="empty"><b>הנתונים לא זמינים כאן</b><span>פתחי את הדף מתוך claude.ai כשאת מחוברת לחשבון, כדי לראות ולשמור את נתוני הגבייה.</span></div>'; return; }
+    if (!S.ready) { v.innerHTML = '<div class="empty">טוען את הנתונים…</div>'; return; }
+    if (S.tab === "dash") v.innerHTML = viewDash();
+    else if (S.tab === "sessions") v.innerHTML = viewSessions();
+    else if (S.tab === "patients") v.innerHTML = viewPatients();
+    else v.innerHTML = viewSettings();
+    if (S.tab === "dash") wireChart();
+  }
+
+  function monthStats(ym) {
+    const by = { credit: 0, cash: 0, transfer: 0 };
+    let collected = 0;
+    S.sessions.forEach((s) => (s.payments || []).forEach((p) => {
+      if (p.date && ymOf(p.date) === ym) { const a = Number(p.amount) || 0; collected += a; if (by[p.method] != null) by[p.method] += a; }
+    }));
+    return { collected, by };
+  }
+
+  function debtsByPatient() {
+    const m = new Map();
+    S.sessions.forEach((s) => {
+      if (isFuture(s)) return;
+      const b = balOf(s); if (b <= 0) return;
+      const e = m.get(s.patientId) || { pid: s.patientId, total: 0, count: 0, oldest: s.date };
+      e.total += b; e.count += 1; if (s.date < e.oldest) e.oldest = s.date;
+      m.set(s.patientId, e);
+    });
+    return Array.from(m.values()).sort((a, b) => b.total - a.total);
+  }
+
+  function viewDash() {
+    const ms = monthStats(S.month);
+    const inMonth = Array.from(S.sessions.values()).filter((s) => ymOf(s.date) === S.month);
+    const held = inMonth.filter((s) => s.status !== "free");
+    const cancelled = inMonth.filter((s) => s.status !== "held").length;
+    const billed = held.reduce((a, s) => a + charge(s), 0);
+    const billedPaid = held.reduce((a, s) => a + Math.min(charge(s), paidOf(s)), 0);
+    const debts = debtsByPatient();
+    const debtTotal = debts.reduce((a, d) => a + d.total, 0);
+    const pct = billed > 0 ? Math.round((billedPaid / billed) * 100) : null;
+
+    let h = '<div style="display:grid;gap:16px">';
+    h += '<section class="tiles">';
+    h += tile("נגבה בחודש", money(ms.collected), "לפי תאריך התשלום", "good");
+    h += tile("ממתין לגבייה", money(debtTotal), debts.length ? debts.length + " מטופלות עם יתרה" : "אין חובות פתוחים 🎉", debtTotal > 0 ? "bad" : "");
+    h += tile("פגישות בחודש", String(held.length), cancelled ? cancelled + " ביטולים" : "ללא ביטולים", "");
+    h += tile("חיוב החודש", money(billed), pct == null ? "אין חיובים עדיין" : pct + "% מזה כבר שולם", "");
+    h += "</section>";
+
+    h += '<div class="grid2">';
+    // debts
+    h += '<section class="panel"><div class="panel-h"><h2>חובות פתוחים</h2><span class="hint">מכל החודשים, עד היום</span></div>';
+    if (!debts.length) h += '<div class="empty">כל המטופלות שילמו. אין יתרות פתוחות.</div>';
+    else {
+      h += '<div>';
+      debts.forEach((d) => {
+        h += '<div class="debt"><span class="who" data-open-patient="' + esc(d.pid) + '">' + esc(patientName(d.pid)) + '</span>' +
+          '<span class="amt">' + money(d.total) + '</span>' +
+          '<button type="button" class="btn small write-only" data-pay-patient="' + esc(d.pid) + '">רישום תשלום</button>' +
+          '<span class="meta">' + d.count + (d.count === 1 ? " פגישה" : " פגישות") + " · הוותיקה מ-" + fmtDate(d.oldest) + "</span></div>";
+      });
+      h += "</div>";
+    }
+    h += "</section>";
+
+    // method breakdown + chart
+    h += '<div style="display:grid;gap:16px;min-width:0">';
+    h += '<section class="panel"><div class="panel-h"><h2>אמצעי תשלום</h2><span class="hint">' + esc(monthName(S.month)) + "</span></div>";
+    if (ms.collected <= 0) h += '<div class="empty">עדיין לא נרשמו תשלומים בחודש הזה.</div>';
+    else {
+      h += '<div class="stackbar" role="img" aria-label="חלוקת התשלומים לפי אמצעי תשלום">';
+      METHOD_KEYS.forEach((k) => { if (ms.by[k] > 0) h += '<span style="width:' + (ms.by[k] / ms.collected * 100) + "%;background:" + METHODS[k].color + '"></span>'; });
+      h += '</div><div class="legend">';
+      METHOD_KEYS.forEach((k) => {
+        h += '<div><i style="background:' + METHODS[k].color + '"></i><span>' + METHODS[k].label + '</span><b class="num">' + money(ms.by[k]) + '</b><span class="pct num">' + Math.round(ms.by[k] / ms.collected * 100) + "%</span></div>";
+      });
+      h += "</div>";
+    }
+    h += "</section>";
+    h += '<section class="panel"><div class="panel-h"><h2>הכנסות לפי חודש</h2><span class="hint">חצי השנה האחרונה</span></div><div class="chart" id="chart">' + chartSVG() + '<div class="tip" id="tip" hidden></div></div>' +
+      '<div class="legend" style="grid-template-columns:repeat(3,auto);justify-content:start;column-gap:16px">' +
+      METHOD_KEYS.map((k) => '<span class="mchip"><i style="background:' + METHODS[k].color + '"></i>' + (METHODS[k].short || METHODS[k].label) + "</span>").join("") +
+      "</div></section>";
+    h += "</div></div></div>";
+    return h;
+  }
+
+  function tile(lbl, val, sub, cls) {
+    return '<div class="tile ' + cls + '"><span class="lbl">' + lbl + '</span><span class="val">' + val + '</span><span class="sub">' + esc(sub) + "</span></div>";
+  }
+
+  let chartData = [];
+  function chartSVG() {
+    const months = []; for (let i = 5; i >= 0; i--) months.push(addMonths(S.month, -i));
+    chartData = months.map((ym) => Object.assign({ ym }, monthStats(ym)));
+    const W = 600, H = 230, top = 26, bottom = 30, left = 8, right = 52;
+    const max = Math.max(1, ...chartData.map((d) => d.collected));
+    const step = niceStep(max / 3); const yMax = Math.ceil(max / step) * step;
+    const ph = H - top - bottom, pw = W - left - right;
+    const slot = pw / chartData.length, bw = Math.min(46, slot * 0.5);
+    const y = (v) => top + ph - (v / yMax) * ph;
+    let s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="הכנסות בששת החודשים האחרונים">';
+    for (let v = 0; v <= yMax + 0.001; v += step) {
+      s += '<line class="grid" x1="' + left + '" x2="' + (W - right) + '" y1="' + y(v) + '" y2="' + y(v) + '"/>';
+      s += '<text x="' + (W - right + 8) + '" y="' + (y(v) + 4) + '" text-anchor="start">' + (v >= 1000 ? nis.format(v / 1000) + "K" : nis.format(v)) + "</text>";
+    }
+    // RTL: newest month on the left side -> draw oldest at right
+    chartData.forEach((d, i) => {
+      const cx = left + pw - slot * (i + 0.5);
+      s += '<rect class="hit" data-i="' + i + '" x="' + (cx - slot / 2 + 2) + '" y="' + top + '" width="' + (slot - 4) + '" height="' + ph + '" rx="6"/>';
+      let acc = 0;
+      const segs = METHOD_KEYS.filter((k) => d.by[k] > 0);
+      segs.forEach((k, j) => {
+        const v = d.by[k]; const y1 = y(acc + v), y0 = y(acc);
+        const gap = j > 0 ? 2 : 0; const hgt = Math.max(0, y0 - y1 - gap);
+        const isTop = j === segs.length - 1;
+        if (isTop && hgt > 4) {
+          const r = 4, x0 = cx - bw / 2, x1 = cx + bw / 2, yb = y0 - gap, yt = y1;
+          s += '<path pointer-events="none" fill="' + METHODS[k].color + '" d="M' + x0 + " " + yb + " V" + (yt + r) + " Q" + x0 + " " + yt + " " + (x0 + r) + " " + yt + " H" + (x1 - r) + " Q" + x1 + " " + yt + " " + x1 + " " + (yt + r) + " V" + yb + ' Z"/>';
+        } else {
+          s += '<rect pointer-events="none" fill="' + METHODS[k].color + '" x="' + (cx - bw / 2) + '" y="' + y1 + '" width="' + bw + '" height="' + hgt + '"/>';
+        }
+        acc += v;
+      });
+      if (d.collected > 0) s += '<text class="tot" pointer-events="none" x="' + cx + '" y="' + (y(d.collected) - 7) + '" text-anchor="middle">' + money(d.collected) + "</text>";
+      s += '<text pointer-events="none" x="' + cx + '" y="' + (H - 9) + '" text-anchor="middle"' + (d.ym === S.month ? ' class="tot"' : "") + ">" + esc(monthName(d.ym, { month: "short" })) + "</text>";
+    });
+    s += '<line class="grid" x1="' + left + '" x2="' + (W - right) + '" y1="' + y(0) + '" y2="' + y(0) + '" style="stroke:var(--muted)"/>';
+    return s + "</svg>";
+  }
+  function niceStep(raw) {
+    const p = Math.pow(10, Math.floor(Math.log10(Math.max(raw, 1))));
+    const n = raw / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+  }
+  function wireChart() {
+    const box = $("#chart"); if (!box) return;
+    const tip = $("#tip");
+    const show = (el) => {
+      $$(".hit.on", box).forEach((x) => x.classList.remove("on"));
+      el.classList.add("on");
+      const d = chartData[Number(el.dataset.i)];
+      tip.innerHTML = "<b>" + esc(monthName(d.ym)) + "</b>" + METHOD_KEYS.map((k) => '<div class="r"><span>' + METHODS[k].label + '</span><span class="num">' + money(d.by[k]) + "</span></div>").join("") + '<div class="r"><b>סה״כ</b><b class="num">' + money(d.collected) + "</b></div>";
+      const br = box.getBoundingClientRect(), er = el.getBoundingClientRect();
+      const cx = er.left + er.width / 2 - br.left;
+      const leftPos = Math.min(Math.max(cx - 80, 0), br.width - 170);
+      tip.style.left = leftPos + "px"; tip.style.top = (er.top - br.top + 30) + "px"; tip.style.transform = "translateY(-100%)";
+      tip.hidden = false;
+    };
+    $$(".hit", box).forEach((el) => {
+      el.addEventListener("pointerenter", () => show(el));
+      el.addEventListener("click", () => show(el));
+    });
+    box.addEventListener("pointerleave", () => { tip.hidden = true; $$(".hit.on", box).forEach((x) => x.classList.remove("on")); });
+  }
+
+  function sessionRow(s, opts) {
+    const st = payState(s), dp = dayParts(s.date), bal = balOf(s), paid = paidOf(s);
+    const methods = Array.from(new Set((s.payments || []).map((p) => p.method))).filter((m) => METHODS[m]);
+    let sub = '<span class="pill ' + st.cls + '">' + st.label + "</span>";
+    if (s.status !== "held") sub += "<span>" + STATUS[s.status] + "</span>";
+    methods.forEach((m) => { sub += '<span class="mchip"><i style="background:' + METHODS[m].color + '"></i>' + (METHODS[m].short || METHODS[m].label) + "</span>"; });
+    const receipts = (s.payments || []).map((p) => p.receipt).filter(Boolean);
+    if (receipts.length) sub += "<span>קבלה " + esc(receipts.join(", ")) + "</span>";
+    if (s.note) sub += "<span>📝 " + esc(s.note) + "</span>";
+    let amt = '<span class="amt">' + money(charge(s));
+    if (paid > 0 && bal > 0) amt += '<br><small style="color:var(--bad)">נותר ' + money(bal) + "</small>";
+    amt += "</span>";
+    let act = "";
+    if (bal > 0) act = '<div class="act">' + METHOD_KEYS.map((k) => '<button type="button" class="qp" data-qp="' + esc(s.id) + '" data-m="' + k + '" title="סימון כשולם ב' + METHODS[k].label + '"><i style="background:' + METHODS[k].color + '"></i>' + (METHODS[k].short || METHODS[k].label) + "</button>").join("") + "</div>";
+    const title = opts && opts.noName ? STATUS[s.status] : esc(patientName(s.patientId));
+    return '<div class="row" data-edit="' + esc(s.id) + '"><div class="d"><b>' + dp.day + "</b><span>" + esc(dp.wd) + (opts && opts.noName ? " " + esc(monthName(ymOf(s.date), { month: "short" })) : "") + '</span></div><div class="nm">' + title + "</div>" + amt + '<div class="sub">' + sub + "</div>" + act + "</div>";
+  }
+
+  function viewSessions() {
+    let list = Array.from(S.sessions.values()).filter((s) => ymOf(s.date) === S.month);
+    const counts = { all: list.length, due: list.filter((s) => balOf(s) > 0).length, paid: list.filter((s) => balOf(s) <= 0).length };
+    if (S.filter === "due") list = list.filter((s) => balOf(s) > 0);
+    if (S.filter === "paid") list = list.filter((s) => balOf(s) <= 0);
+    list.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    let h = '<section class="panel"><div class="filters">' +
+      fbtn("all", "הכל", counts.all) + fbtn("due", "לא שולם", counts.due) + fbtn("paid", "שולם / ללא חיוב", counts.paid) +
+      '<span class="spacer"></span><span class="note write-only">לחיצה על אמצעי תשלום מסמנת את הפגישה כשולמה במלואה</span></div>';
+    if (!list.length) {
+      h += '<div class="empty"><span>' + (counts.all ? "אין פגישות שמתאימות לסינון." : "עדיין אין פגישות ב" + esc(monthName(S.month)) + ".") + '</span><button type="button" class="btn primary write-only" data-new-session="">+ הוספת פגישה</button></div>';
+    } else h += '<div class="rows">' + list.map((s) => sessionRow(s)).join("") + "</div>";
+    return h + "</section>";
+  }
+  function fbtn(k, label, n) { return '<button type="button" data-filter="' + k + '" aria-pressed="' + (S.filter === k) + '">' + label + ' <span class="num">' + n + "</span></button>"; }
+
+  function patientSummary(pid) {
+    let total = 0, count = 0, last = "";
+    S.sessions.forEach((s) => { if (s.patientId !== pid) return; count++; if (!isFuture(s)) total += balOf(s); if (s.date > last) last = s.date; });
+    return { total, count, last };
+  }
+
+  function viewPatients() {
+    const all = Array.from(S.patients.values()).sort((a, b) => (a.active === b.active ? a.name.localeCompare(b.name, "he") : a.active ? -1 : 1));
+    let h = '<section style="display:grid;gap:12px"><div class="filters"><span class="note">' + all.filter((p) => p.active).length + ' מטופלות פעילות</span><span class="spacer"></span><button type="button" class="btn primary write-only" id="add-patient">+ מטופלת חדשה</button></div>';
+    if (!all.length) h += '<div class="empty"><span>עדיין לא נוספו מטופלות. הוסיפי את הראשונה כדי להתחיל לרשום פגישות.</span></div>';
+    else {
+      h += '<div class="plist">';
+      all.forEach((p) => {
+        const sm = patientSummary(p.id);
+        h += '<button type="button" class="pcard' + (p.active ? "" : " archived") + '" data-open-patient="' + esc(p.id) + '"><h3>' + esc(p.name) + (p.active ? "" : " · בארכיון") + "</h3>" +
+          '<div class="kv"><span>יתרה לתשלום</span><b class="num' + (sm.total > 0 ? " bad" : "") + '">' + money(sm.total) + "</b></div>" +
+          '<div class="kv"><span>פגישות</span><b class="num">' + sm.count + "</b></div>" +
+          '<div class="kv"><span>פגישה אחרונה</span><b class="num">' + (sm.last ? fmtDate(sm.last) : "—") + "</b></div></button>";
+      });
+      h += "</div>";
+    }
+    return h + "</section>";
+  }
+
+  function viewSettings() {
+    const ex = Array.from(S.patients.values()).filter((p) => p.example).length + Array.from(S.sessions.values()).filter((s) => s.example).length;
+    let h = '<div class="grid2">';
+    h += '<section class="panel"><div class="panel-h"><h2>הגדרות הקליניקה</h2></div><div class="form">' +
+      '<div class="field"><label for="set-name">שם הקליניקה (מופיע בראש הדף)</label><input id="set-name" value="' + esc(S.settings.clinicName) + '" placeholder="לדוגמה: הקליניקה של רחל"></div>' +
+      '<div class="field"><label for="set-price">מחיר ברירת מחדל לפגישה (₪)</label><input id="set-price" type="number" min="0" step="10" inputmode="numeric" value="' + esc(S.settings.defaultPrice) + '"></div>' +
+      '<div><button type="button" class="btn primary write-only" id="save-settings">שמירת הגדרות</button></div>' +
+      '<p class="note">שינוי המחיר חל על פגישות חדשות בלבד. פגישות שכבר נרשמו שומרות על המחיר שלהן.</p></div></section>';
+
+    h += '<section class="panel"><div class="panel-h"><h2>ייצוא לרואה החשבון</h2></div><div class="form">';
+    if (!S.downloads) h += '<p class="note">הורדת קבצים לא זמינה בתצוגה הזו. פתחי את הדף ב-claude.ai כדי לייצא.</p>';
+    else {
+      const y = S.month.slice(0, 4);
+      h += '<div class="field"><label for="exp-range">טווח</label><select id="exp-range"><option value="month">' + esc(monthName(S.month)) + '</option><option value="year">כל שנת ' + y + '</option><option value="all">כל הנתונים</option></select></div>' +
+        '<div class="filters"><button type="button" class="btn" id="exp-payments">⬇ תשלומים (CSV)</button><button type="button" class="btn" id="exp-sessions">⬇ פגישות ויתרות (CSV)</button></div>' +
+        '<p class="note">הקובץ נפתח ישירות באקסל, כולל עברית. „תשלומים” מסודר לפי תאריך התשלום, עם אמצעי התשלום ומספר הקבלה.</p>';
+    }
+    h += "</div></section></div>";
+
+    h += '<section class="panel" style="margin-top:16px"><div class="panel-h"><h2>פרטיות</h2></div><p class="note">הנתונים נשמרים בענן, בדף הפרטי שלך ב-claude.ai, ומסתנכרנים בין הטלפון למחשב. רק בעלת הדף ומי שהוזמנה כעורכת יכולות לראות ולשנות אותם.</p>';
+    if (ex > 0) h += '<div class="filters write-only"><span class="note">יש כאן ' + ex + ' רשומות דוגמה (מסומנות „דוגמה”).</span><button type="button" class="btn danger" id="clear-examples">מחיקת נתוני הדוגמה</button></div>';
+    h += "</section>";
+    return h;
+  }
+
+  // ---------- dialogs ----------
+  const dlg = $("#dlg"), body = $("#dlg-body");
+  function openDlg(html, wire) { body.innerHTML = html; if (!dlg.open) dlg.showModal(); wire && wire(); }
+  function closeDlg() { if (dlg.open) dlg.close(); }
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) closeDlg(); });
+  const dlgHead = (t) => '<div class="dlg-h"><h2>' + t + '</h2><button type="button" class="x" data-close aria-label="סגירה">×</button></div>';
+  body.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeDlg(); });
+
+  function segHTML(id, items, val) {
+    return '<div class="seg" id="' + id + '">' + items.map((it) => '<button type="button" data-v="' + it.v + '" aria-pressed="' + (it.v === val) + '">' + (it.c ? '<i style="background:' + it.c + '"></i>' : "") + it.l + "</button>").join("") + "</div>";
+  }
+  function wireSeg(id, onChange) {
+    const el = $("#" + id);
+    el.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      $$("button", el).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      onChange && onChange(b.dataset.v);
+    });
+  }
+  const segVal = (id) => { const b = $("#" + id + ' button[aria-pressed="true"]'); return b ? b.dataset.v : null; };
+  const methodItems = (withNone) => (withNone ? [{ v: "none", l: "טרם שולם" }] : []).concat(METHOD_KEYS.map((k) => ({ v: k, l: METHODS[k].label, c: METHODS[k].color })));
+
+  function patientOptions(selected) {
+    const ps = Array.from(S.patients.values()).filter((p) => p.active || p.id === selected).sort((a, b) => a.name.localeCompare(b.name, "he"));
+    return '<option value="">בחרי מטופלת…</option>' + ps.map((p) => '<option value="' + esc(p.id) + '"' + (p.id === selected ? " selected" : "") + ">" + esc(p.name) + "</option>").join("") + '<option value="__new">+ מטופלת חדשה…</option>';
+  }
+
+  function openSession(sid, presetPatient) {
+    const existing = sid ? S.sessions.get(sid) : null;
+    const s = existing ? plain(existing) : { patientId: presetPatient || "", date: S.month === ymOf(todayISO()) ? todayISO() : S.month + "-01", price: Number(S.settings.defaultPrice) || 400, status: "held", note: "", payments: [] };
+    let payments = (s.payments || []).slice();
+    const ro = !S.canWrite;
+    const html = dlgHead(existing ? "עריכת פגישה" : "פגישה חדשה") +
+      '<div class="form">' +
+      '<div class="field"><label for="f-patient">מטופלת</label><select id="f-patient">' + patientOptions(s.patientId) + "</select></div>" +
+      '<div class="field" id="f-newp-wrap" hidden><label for="f-newp">שם המטופלת החדשה</label><input id="f-newp" placeholder="שם מלא"></div>' +
+      '<div class="fr"><div class="field"><label for="f-date">תאריך הפגישה</label><input id="f-date" type="date" value="' + esc(s.date) + '"></div>' +
+      '<div class="field"><label for="f-price">מחיר (₪)</label><input id="f-price" type="number" min="0" step="10" inputmode="numeric" value="' + esc(s.price) + '"></div></div>' +
+      '<div class="field"><span class="lab">סטטוס</span>' + segHTML("f-status", [{ v: "held", l: STATUS.held }, { v: "late", l: STATUS.late }, { v: "free", l: STATUS.free }], s.status) + "</div>" +
+      '<div class="section"><h3>תשלום</h3><div class="paylist" id="f-paylist"></div>' +
+      '<div id="f-newpay"><div class="field"><span class="lab" id="f-newpay-lab">איך שולם?</span>' + segHTML("f-method", methodItems(true), "none") + "</div>" +
+      '<div class="fr" id="f-paydetails" hidden><div class="field"><label for="f-amount">סכום (₪)</label><input id="f-amount" type="number" min="0" step="10" inputmode="numeric"></div>' +
+      '<div class="field"><label for="f-paydate">תאריך תשלום</label><input id="f-paydate" type="date" value="' + todayISO() + '"></div>' +
+      '<div class="field"><label for="f-receipt">מספר קבלה</label><input id="f-receipt" placeholder="לא חובה"></div></div></div></div>' +
+      '<div class="field"><label for="f-note">הערה</label><textarea id="f-note" placeholder="לא חובה">' + esc(s.note) + "</textarea></div>" +
+      '<div id="f-err" class="banner" hidden></div>' +
+      "</div>" +
+      '<div class="dlg-f">' + (existing && !ro ? '<button type="button" class="btn danger" id="f-del">מחיקת הפגישה</button>' : "") +
+      '<div class="end"><button type="button" class="btn" data-close>ביטול</button>' + (ro ? "" : '<button type="button" class="btn primary" id="f-save">שמירה</button>') + "</div></div>";
+
+    openDlg(html, () => {
+      const curCharge = () => (segVal("f-status") === "free" ? 0 : Number($("#f-price").value) || 0);
+      const paidSoFar = () => payments.reduce((a, p) => a + (Number(p.amount) || 0), 0);
+      const drawPays = () => {
+        $("#f-paylist").innerHTML = payments.map((p, i) => '<div class="payrow"><span class="mchip"><i style="background:' + (METHODS[p.method] || METHODS.cash).color + '"></i>' + esc((METHODS[p.method] || { label: p.method }).label) + '</span><b class="num">' + money(p.amount) + '</b><span class="grow">' + fmtDate(p.date) + (p.receipt ? " · קבלה " + esc(p.receipt) : "") + "</span>" + (ro ? "" : '<button type="button" class="btn small danger" data-rmpay="' + i + '">הסרה</button>') + "</div>").join("");
+        const rest = Math.max(0, curCharge() - paidSoFar());
+        $("#f-newpay-lab").textContent = payments.length ? (rest > 0 ? "תשלום נוסף (נותרו " + money(rest) + ")" : "תשלום נוסף") : "איך שולם?";
+        if (segVal("f-method") !== "none" && !$("#f-amount").dataset.touched) $("#f-amount").value = rest || "";
+      };
+      drawPays();
+      $("#f-paylist").addEventListener("click", (e) => { const b = e.target.closest("[data-rmpay]"); if (!b) return; payments.splice(Number(b.dataset.rmpay), 1); drawPays(); });
+      wireSeg("f-status", drawPays);
+      wireSeg("f-method", (v) => { $("#f-paydetails").hidden = v === "none"; drawPays(); });
+      $("#f-amount").addEventListener("input", (e) => { e.target.dataset.touched = "1"; });
+      $("#f-price").addEventListener("input", drawPays);
+      $("#f-patient").addEventListener("change", (e) => { $("#f-newp-wrap").hidden = e.target.value !== "__new"; if (e.target.value === "__new") $("#f-newp").focus(); });
+      if (ro) { $$("input,select,textarea", body).forEach((x) => (x.disabled = true)); $("#f-newpay").hidden = true; return; }
+      const del = $("#f-del");
+      if (del) del.addEventListener("click", () => {
+        del.outerHTML = '<div class="confirm">למחוק את הפגישה לצמיתות? <button type="button" class="btn small danger" id="f-del2">כן, למחוק</button></div>';
+        $("#f-del2").addEventListener("click", () => { delDoc("sessions", sid).then(() => { closeDlg(); toast("הפגישה נמחקה"); }, () => {}); });
+      });
+      $("#f-save").addEventListener("click", async () => {
+        const err = $("#f-err"); err.hidden = true;
+        const fail = (m) => { err.textContent = m; err.hidden = false; };
+        let pid = $("#f-patient").value;
+        const date = $("#f-date").value, price = Number($("#f-price").value);
+        if (!pid) return fail("בחרי מטופלת.");
+        if (pid === "__new" && !$("#f-newp").value.trim()) return fail("כתבי את שם המטופלת החדשה.");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return fail("בחרי תאריך לפגישה.");
+        if (!(price >= 0)) return fail("המחיר צריך להיות מספר.");
+        const m = segVal("f-method");
+        const finalPays = payments.slice();
+        if (m && m !== "none") {
+          const amount = Number($("#f-amount").value);
+          if (!(amount > 0)) return fail("כתבי את סכום התשלום.");
+          const pd = $("#f-paydate").value || todayISO();
+          finalPays.push({ amount, method: m, date: pd, receipt: $("#f-receipt").value.trim() });
+        }
+        $("#f-save").disabled = true;
+        try {
+          if (pid === "__new") {
+            const npid = newId("patients");
+            await setDoc("patients", npid, { name: $("#f-newp").value.trim(), phone: "", note: "", active: true, createdAt: todayISO() });
+            pid = npid;
+          }
+          const data = Object.assign({}, existing ? plain(existing) : { createdAt: todayISO() }, { patientId: pid, date, price, status: segVal("f-status"), note: $("#f-note").value.trim(), payments: finalPays });
+          const id = sid || newId("sessions");
+          await setDoc("sessions", id, data);
+          closeDlg();
+          toast(existing ? "הפגישה עודכנה" : "הפגישה נוספה");
+          if (!existing && ymOf(date) !== S.month) { S.month = ymOf(date); render(); }
+        } catch (e) { $("#f-save").disabled = false; }
+      });
+    });
+  }
+
+  function openPatientEdit(pid) {
+    const p = pid ? S.patients.get(pid) : null;
+    const sm = pid ? patientSummary(pid) : { count: 0 };
+    const html = dlgHead(p ? "פרטי מטופלת" : "מטופלת חדשה") + '<div class="form">' +
+      '<div class="field"><label for="p-name">שם מלא</label><input id="p-name" value="' + esc(p ? p.name : "") + '"></div>' +
+      '<div class="field"><label for="p-phone">טלפון</label><input id="p-phone" type="tel" dir="ltr" style="text-align:right" value="' + esc(p ? p.phone : "") + '"></div>' +
+      '<div class="field"><label for="p-note">הערה</label><textarea id="p-note">' + esc(p ? p.note : "") + "</textarea></div>" +
+      (p ? '<div class="field"><span class="lab">מצב</span>' + segHTML("p-active", [{ v: "1", l: "פעילה" }, { v: "0", l: "בארכיון (סיימה טיפול)" }], p.active ? "1" : "0") + "</div>" : "") +
+      '<div id="p-err" class="banner" hidden></div></div>' +
+      '<div class="dlg-f">' + (p && sm.count === 0 ? '<button type="button" class="btn danger" id="p-del">מחיקה</button>' : "") +
+      '<div class="end"><button type="button" class="btn" data-close>ביטול</button><button type="button" class="btn primary" id="p-save">שמירה</button></div></div>';
+    openDlg(html, () => {
+      if (p) wireSeg("p-active");
+      $("#p-name").focus();
+      const del = $("#p-del");
+      if (del) del.addEventListener("click", () => {
+        del.outerHTML = '<div class="confirm">למחוק את המטופלת? <button type="button" class="btn small danger" id="p-del2">כן, למחוק</button></div>';
+        $("#p-del2").addEventListener("click", () => delDoc("patients", pid).then(() => { closeDlg(); toast("המטופלת נמחקה"); }, () => {}));
+      });
+      $("#p-save").addEventListener("click", async () => {
+        const name = $("#p-name").value.trim();
+        if (!name) { $("#p-err").textContent = "כתבי את שם המטופלת."; $("#p-err").hidden = false; return; }
+        const data = Object.assign({}, p ? { createdAt: p.createdAt || todayISO(), example: !!p.example } : { createdAt: todayISO() }, { name, phone: $("#p-phone").value.trim(), note: $("#p-note").value.trim(), active: p ? segVal("p-active") === "1" : true });
+        if (!data.example) delete data.example;
+        $("#p-save").disabled = true;
+        try { await setDoc("patients", pid || newId("patients"), data); closeDlg(); toast(p ? "הפרטים נשמרו" : "המטופלת נוספה"); }
+        catch (e) { $("#p-save").disabled = false; }
+      });
+    });
+  }
+
+  function openPatient(pid) {
+    const p = S.patients.get(pid);
+    if (!p) return;
+    const list = sortedSessions().filter((s) => s.patientId === pid);
+    const sm = patientSummary(pid);
+    const paidTotal = list.reduce((a, s) => a + paidOf(s), 0);
+    let html = dlgHead(esc(p.name)) +
+      '<div class="tiles" style="grid-template-columns:repeat(3,minmax(0,1fr))">' +
+      tile("יתרה", money(sm.total), sm.total > 0 ? "לתשלום" : "הכל שולם", sm.total > 0 ? "bad" : "good") +
+      tile("שולם", money(paidTotal), "מכל הזמנים", "") + tile("פגישות", String(sm.count), sm.last ? "אחרונה " + fmtDate(sm.last) : "", "") + "</div>" +
+      (p.phone ? '<p class="note">טלפון: <span dir="ltr" class="num" style="user-select:all">' + esc(p.phone) + "</span></p>" : "") +
+      (p.note ? '<p class="note">📝 ' + esc(p.note) + "</p>" : "") +
+      '<div class="filters write-only"><button type="button" class="btn primary" id="pp-new">+ פגישה</button>' + (sm.total > 0 ? '<button type="button" class="btn" id="pp-pay">רישום תשלום</button>' : "") + '<span class="spacer"></span><button type="button" class="btn" id="pp-edit">עריכת פרטים</button></div>' +
+      '<div class="rows" id="pp-rows">' + (list.length ? list.map((s) => sessionRow(s, { noName: true })).join("") : '<div class="empty">עדיין אין פגישות למטופלת הזו.</div>') + "</div>";
+    openDlg(html, () => {
+      const n = $("#pp-new"); if (n) n.addEventListener("click", () => openSession(null, pid));
+      const pay = $("#pp-pay"); if (pay) pay.addEventListener("click", () => openPayPatient(pid));
+      const ed = $("#pp-edit"); if (ed) ed.addEventListener("click", () => openPatientEdit(pid));
+    });
+  }
+
+  function openPayPatient(pid) {
+    const open = sortedSessions().filter((s) => s.patientId === pid && !isFuture(s) && balOf(s) > 0).reverse(); // oldest first
+    const total = open.reduce((a, s) => a + balOf(s), 0);
+    const html = dlgHead("רישום תשלום – " + esc(patientName(pid))) + '<div class="form">' +
+      '<p class="note">יתרה פתוחה: <b class="num">' + money(total) + "</b> על " + open.length + (open.length === 1 ? " פגישה" : " פגישות") + ". התשלום ייזקף לפגישות הוותיקות קודם.</p>" +
+      '<div class="field"><span class="lab">אמצעי תשלום</span>' + segHTML("y-method", methodItems(false), "credit") + "</div>" +
+      '<div class="fr"><div class="field"><label for="y-amount">סכום (₪)</label><input id="y-amount" type="number" min="0" step="10" inputmode="numeric" value="' + total + '"></div>' +
+      '<div class="field"><label for="y-date">תאריך תשלום</label><input id="y-date" type="date" value="' + todayISO() + '"></div>' +
+      '<div class="field"><label for="y-receipt">מספר קבלה</label><input id="y-receipt" placeholder="לא חובה"></div></div>' +
+      '<div id="y-err" class="banner" hidden></div></div>' +
+      '<div class="dlg-f"><div class="end"><button type="button" class="btn" data-close>ביטול</button><button type="button" class="btn primary" id="y-save">רישום התשלום</button></div></div>';
+    openDlg(html, () => {
+      wireSeg("y-method");
+      $("#y-save").addEventListener("click", async () => {
+        let amount = Number($("#y-amount").value);
+        const err = $("#y-err");
+        if (!(amount > 0)) { err.textContent = "כתבי סכום גדול מאפס."; err.hidden = false; return; }
+        if (amount > total) { err.textContent = "הסכום גבוה מהיתרה (" + money(total) + "). אם שולמה מקדמה לפגישה עתידית, רשמי אותה בפגישה עצמה."; err.hidden = false; return; }
+        $("#y-save").disabled = true;
+        const method = segVal("y-method"), date = $("#y-date").value || todayISO(), receipt = $("#y-receipt").value.trim();
+        try {
+          for (const s of open) {
+            if (amount <= 0) break;
+            const part = Math.min(amount, balOf(s));
+            const payments = (s.payments || []).map((p) => Object.assign({}, p)).concat([{ amount: part, method, date, receipt }]);
+            await updDoc("sessions", s.id, { payments });
+            amount -= part;
+          }
+          closeDlg(); toast("התשלום נרשם");
+        } catch (e) { $("#y-save").disabled = false; }
+      });
+    });
+  }
+
+  // ---------- export ----------
+  function csv(rows) { return "﻿" + rows.map((r) => r.map((c) => { const s = String(c == null ? "" : c); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(",")).join("\r\n"); }
+  function inRange(iso, range) { if (!iso) return false; if (range === "all") return true; if (range === "year") return iso.slice(0, 4) === S.month.slice(0, 4); return ymOf(iso) === S.month; }
+  async function doExport(kind) {
+    const range = $("#exp-range").value;
+    let rows, name;
+    const tag = range === "all" ? "all" : range === "year" ? S.month.slice(0, 4) : S.month;
+    if (kind === "payments") {
+      rows = [["תאריך תשלום", "מטופלת", "סכום", "אמצעי תשלום", "מספר קבלה", "תאריך הפגישה", "הערה"]];
+      const list = [];
+      S.sessions.forEach((s) => (s.payments || []).forEach((p) => { if (inRange(p.date, range)) list.push([p.date, patientName(s.patientId), p.amount, (METHODS[p.method] || { label: p.method }).label, p.receipt || "", s.date, s.note || ""]); }));
+      list.sort((a, b) => (a[0] < b[0] ? -1 : 1)).forEach((r) => { r[0] = fmtDate(r[0]); r[5] = fmtDate(r[5]); rows.push(r); });
+      name = "payments-" + tag + ".csv";
+    } else {
+      rows = [["תאריך", "מטופלת", "סטטוס", "חיוב", "שולם", "יתרה", "אמצעי תשלום", "מספרי קבלה", "הערה"]];
+      sortedSessions().reverse().filter((s) => inRange(s.date, range)).forEach((s) => {
+        rows.push([fmtDate(s.date), patientName(s.patientId), STATUS[s.status], charge(s), paidOf(s), balOf(s), Array.from(new Set((s.payments || []).map((p) => (METHODS[p.method] || { label: p.method }).label))).join(" + "), (s.payments || []).map((p) => p.receipt).filter(Boolean).join(" "), s.note || ""]);
+      });
+      name = "sessions-" + tag + ".csv";
+    }
+    if (rows.length === 1) { toast("אין נתונים בטווח שבחרת."); return; }
+    try { await S.downloads.save({ filename: name, data: csv(rows) }); toast("הקובץ נשמר"); }
+    catch (e) { if (e && e.code === "declined") return; toast("ההורדה לא הצליחה. נסי שוב בעוד רגע."); }
+  }
+
+  // ---------- events ----------
+  $("#m-prev").addEventListener("click", () => { S.month = addMonths(S.month, -1); render(); });
+  $("#m-next").addEventListener("click", () => { S.month = addMonths(S.month, 1); render(); });
+  $("#add-session").addEventListener("click", () => { if (S.ready) openSession(null); });
+  $$(".tabs button").forEach((b) => b.addEventListener("click", () => { S.tab = b.dataset.tab; try { localStorage.setItem("gvia-tab", S.tab); } catch (e) { /* ignore */ } render(); }));
+
+  function onActionClick(e) {
+    const t = e.target;
+    const qp = t.closest("[data-qp]"); if (qp) { e.stopPropagation(); quickPay(qp.dataset.qp, qp.dataset.m); return true; }
+    const pp = t.closest("[data-pay-patient]"); if (pp) { openPayPatient(pp.dataset.payPatient); return true; }
+    const op = t.closest("[data-open-patient]"); if (op) { openPatient(op.dataset.openPatient); return true; }
+    const ed = t.closest("[data-edit]"); if (ed) { openSession(ed.dataset.edit); return true; }
+    return false;
+  }
+  $("#view").addEventListener("click", async (e) => {
+    if (onActionClick(e)) return;
+    const t = e.target;
+    const f = t.closest("[data-filter]"); if (f) { S.filter = f.dataset.filter; render(); return; }
+    if (t.closest("[data-new-session]")) { openSession(null); return; }
+    if (t.closest("#add-patient")) { openPatientEdit(null); return; }
+    if (t.closest("#exp-payments")) { doExport("payments"); return; }
+    if (t.closest("#exp-sessions")) { doExport("sessions"); return; }
+    if (t.closest("#save-settings")) {
+      const price = Number($("#set-price").value);
+      if (!(price >= 0)) { toast("המחיר צריך להיות מספר."); return; }
+      try { await queueWrite("settings/main", () => S.db.doc("settings/main").set({ clinicName: $("#set-name").value.trim(), defaultPrice: price })).catch(writeErr); toast("ההגדרות נשמרו"); } catch (err) { /* reported */ }
+      return;
+    }
+    const ce = t.closest("#clear-examples");
+    if (ce) {
+      ce.outerHTML = '<div class="confirm">למחוק את כל נתוני הדוגמה? הנתונים שלך לא יימחקו. <button type="button" class="btn small danger" id="clear-examples2">כן, למחוק</button></div>';
+      return;
+    }
+    if (t.closest("#clear-examples2")) {
+      try {
+        for (const s of Array.from(S.sessions.values()).filter((x) => x.example)) await delDoc("sessions", s.id);
+        for (const p of Array.from(S.patients.values()).filter((x) => x.example)) await delDoc("patients", p.id);
+        toast("נתוני הדוגמה נמחקו");
+      } catch (err) { /* reported */ }
+    }
+  });
+  // actions inside the patient dialog's session list
+  body.addEventListener("click", (e) => {
+    if (!e.target.closest("#pp-rows")) return;
+    const qp = e.target.closest("[data-qp]");
+    if (qp) { quickPay(qp.dataset.qp, qp.dataset.m); closeDlg(); return; }
+    const ed = e.target.closest("[data-edit]"); if (ed) openSession(ed.dataset.edit);
+  });
+
+  function applyWriteMode() {
+    document.getElementById("app").classList.toggle("readonly", !S.canWrite);
+    $("#dlg-body").classList.toggle("readonly", !S.canWrite);
+    const b = $("#banner");
+    b.hidden = S.canWrite;
+    b.textContent = "מצב צפייה בלבד: אפשר לראות את הנתונים, אבל לא לשנות אותם.";
+  }
+
+  // ---------- boot ----------
+  render();
+  (async () => {
+    const api = window.claude && window.claude.use ? window.claude : null;
+    if (!api) { S.noDb = true; render(); return; }
+    const [db, user, downloads] = await Promise.all([api.use("db"), api.use("user"), api.use("downloads")]);
+    S.downloads = downloads;
+    if (!db) { S.noDb = true; render(); return; }
+    S.db = db;
+    if (user) { const can = await user.can("data.write"); if (can === false) { S.canWrite = false; applyWriteMode(); } }
+    let got = { p: false, s: false, c: false };
+    const mark = (k) => { got[k] = true; if (got.p && got.s && got.c) S.ready = true; render(); };
+    const onErr = () => { toast("החיבור לנתונים נקטע. רענני את הדף."); };
+    db.doc("settings/main").onSnapshot((snap) => {
+      const d = snap.exists ? snap.data() : {};
+      S.settings = { clinicName: d.clinicName || "", defaultPrice: d.defaultPrice != null ? d.defaultPrice : 400 };
+      mark("c");
+    }, onErr);
+    db.collection("patients").onSnapshot((snap) => {
+      S.patients = new Map(snap.docs.map((d) => [d.id, Object.assign({ id: d.id, phone: "", note: "", active: true }, d.data())]));
+      mark("p");
+    }, onErr);
+    db.collection("sessions").onSnapshot((snap) => {
+      S.sessions = new Map(snap.docs.map((d) => [d.id, Object.assign({ id: d.id, payments: [], status: "held", note: "" }, d.data())]));
+      mark("s");
+    }, onErr);
+  })();
+})();
+</script>
