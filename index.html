@@ -271,7 +271,7 @@ button { cursor: pointer; }
 .wh:hover { background: var(--accent-soft); }
 .wh .wn { font-weight: 600; font-size: .92rem; }
 .wh .gd { font-size: .85rem; color: var(--ink-2); white-space: nowrap; }
-.wh .gd b { font-family: var(--f-num); font-size: 1.1rem; font-weight: 400; color: var(--ink); }
+.wh .gd b { font-family: var(--f-num); font-size: .95rem; font-weight: 500; color: var(--ink); }
 .wh .hd { font-size: .82rem; color: var(--accent); font-weight: 600; white-space: nowrap; }
 .wh.today .gd b { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0 8px; }
 .wh.sel { box-shadow: inset 0 -3px 0 var(--accent); }
@@ -316,7 +316,7 @@ button { cursor: pointer; }
 .hdn.rc { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
 @media (max-width: 700px) {
   .wk { --hh: 72px; grid-template-columns: 50px minmax(0, 1fr); }
-  .wh .gd b { font-size: 1.1rem; }
+  .wh .gd b { font-size: 1rem; }
   .cal .dtop { flex-direction: column; gap: 0; }
   .hdn { font-size: .68rem; }
 }
@@ -464,16 +464,11 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     hebCache.set(iso, r);
     return r;
   }
-  const fullDate = (iso, boldDay) => { if (!iso) return ""; const [y, m, d] = iso.split("-").map(Number); return (boldDay ? "<b>" + d + "</b>" : d) + " ב" + monthName(iso.slice(0, 7), { month: "long" }) + " " + y; };
+  const fullDate = (iso, bold) => (bold ? "<b>" + fmtDate(iso) + "</b>" : fmtDate(iso));
   const hebFull = (iso) => { const h = heb(iso); return h.month ? h.day + " ב" + h.month + " " + h.year : ""; };
   const addDays = (iso, n) => { const [y, m, d] = iso.split("-").map(Number); return isoDate(new Date(y, m - 1, d + n)); };
   const sundayOf = (iso) => { const [y, m, d] = iso.split("-").map(Number); return addDays(iso, -new Date(y, m - 1, d).getDay()); };
-  function gregRange(a, b) {
-    const [ya, ma, da] = a.split("-").map(Number), [yb, mb, db] = b.split("-").map(Number);
-    const mn = (yy, mm) => monthName(yy + "-" + pad(mm), { month: "long" });
-    if (ma === mb) return '<bdi dir="ltr">' + da + "–" + db + "</bdi> ב" + mn(ya, ma) + " " + ya;
-    return da + " ב" + mn(ya, ma) + (ya !== yb ? " " + ya : "") + " – " + db + " ב" + mn(yb, mb) + " " + yb;
-  }
+  const gregRange = (a, b) => fmtDate(a) + " – " + fmtDate(b);
   function hebRange(a, b) {
     const x = heb(a), y = heb(b);
     if (!x.month) return "";
@@ -905,7 +900,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
   function dayPanelHTML(byDay) {
     const evs = byDay.get(S.selDay) || [];
     const hb = heb(S.selDay);
-    let h = '<div class="daypanel"><div class="panel-h"><h3>יום ' + WD_NAME[dow(S.selDay)] + ", " + Number(S.selDay.slice(8)) + " ב" + esc(monthName(ymOf(S.selDay), { month: "long" })) + ' <span class="sub">· ' + hb.day + " ב" + esc(hb.month) + " " + hb.year + "</span></h3>" +
+    let h = '<div class="daypanel"><div class="panel-h"><h3>יום ' + WD_NAME[dow(S.selDay)] + ", " + fmtDate(S.selDay) + ' <span class="sub">· ' + hb.day + " ב" + esc(hb.month) + " " + hb.year + "</span></h3>" +
       '<button type="button" class="btn small write-only" data-new-day="' + S.selDay + '">' + icon("i-plus") + "פגישה ביום הזה</button></div>";
     h += evs.length ? '<div class="tbl sess">' + evs.map((s) => sessionRow(s)).join("") + "</div>" : '<p class="note">אין פגישות ביום הזה.</p>';
     return h + "</div>";
