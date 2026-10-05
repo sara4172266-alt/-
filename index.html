@@ -169,7 +169,7 @@ button { cursor: pointer; }
 .chips .n { color: var(--muted); font-family: var(--f-num); margin-inline-start: 5px; font-weight: 400; }
 
 /* sessions table */
-.sess .tr { grid-template-columns: 84px minmax(0, 1fr) 84px 230px 236px; cursor: pointer; padding-inline: 8px; margin-inline: -8px; border-radius: 8px; }
+.sess .tr { grid-template-columns: 100px minmax(0, 1fr) 84px 220px 236px; cursor: pointer; padding-inline: 8px; margin-inline: -8px; border-radius: 8px; }
 .sess .tr:not(.th):hover { background: var(--surface-2); }
 .sess .th { cursor: default; }
 .sess .dt { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
@@ -184,7 +184,7 @@ button { cursor: pointer; }
 .edit-hint { color: var(--muted); font-size: .86rem; text-align: left; }
 @media (max-width: 820px) {
   .sess .th { display: none; }
-  .sess .tr { grid-template-columns: 64px minmax(0, 1fr) auto; grid-template-areas: "dt nm amt" "dt stc stc" "pay pay pay"; row-gap: 6px; }
+  .sess .tr { grid-template-columns: 76px minmax(0, 1fr) auto; grid-template-areas: "dt nm amt" "dt stc stc" "pay pay pay"; row-gap: 6px; }
   .sess .dt { grid-area: dt; align-self: start; }
   .sess .nm { grid-area: nm; }
   .sess .amtc { grid-area: amt; }
@@ -252,6 +252,69 @@ button { cursor: pointer; }
 .cnt { display: inline-grid; place-items: center; min-width: 28px; height: 24px; padding-inline: 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .cnt.zero { background: none; color: var(--muted); }
 .show-sm { display: none; }
+
+/* week grid */
+.wk-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.wk-title { display: grid; flex: 1; min-width: 0; text-align: center; }
+.wk-title b { font-size: 1.15rem; }
+.wk-title span { color: var(--ink-2); font-size: .92rem; }
+.icon-btn { padding: 6px; width: 38px; height: 38px; }
+.wk-wrap { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.wk { --hh: 72px; display: grid; grid-template-columns: 58px repeat(var(--cols), minmax(0, 1fr)); }
+.wk-corner, .wh, .wk-allday-l, .wk-allday { border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.wh { display: grid; justify-items: center; gap: 0; padding: 8px 2px; border-inline-start: 1px solid var(--line); cursor: pointer; min-width: 0; text-align: center; }
+.wh:hover { background: var(--accent-soft); }
+.wh .wn { font-weight: 700; font-size: .92rem; }
+.wh .gd { font-size: .85rem; color: var(--ink-2); white-space: nowrap; }
+.wh .gd b { font-family: var(--f-num); font-size: 1.25rem; font-weight: 500; color: var(--ink); }
+.wh .hd { font-size: .82rem; color: var(--accent); font-weight: 600; white-space: nowrap; }
+.wh.today .gd b { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 0 8px; }
+.wh.sel { box-shadow: inset 0 -3px 0 var(--accent); }
+.wh.sat, .wk-col.sat, .wk-allday.sat { background-color: var(--surface-2); }
+.wk-allday-l { font-size: .78rem; color: var(--muted); display: grid; place-items: center; text-align: center; padding: 4px; }
+.wk-allday { border-inline-start: 1px solid var(--line); padding: 4px; display: grid; gap: 3px; align-content: start; min-width: 0; }
+.wk-hours { position: relative; height: calc(var(--hours) * var(--hh)); }
+.wk-hours span { display: block; height: var(--hh); font-family: var(--f-num); font-size: .78rem; color: var(--muted); text-align: center; transform: translateY(-.6em); }
+.wk-hours span:first-child { transform: none; }
+.wk-col { position: relative; height: calc(var(--hours) * var(--hh)); border-inline-start: 1px solid var(--line); min-width: 0; }
+.wk-col.today { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+.slot { height: calc(var(--hh) / 2); border-top: 1px solid var(--line); cursor: pointer; }
+.slot.half { border-top: 1px dashed color-mix(in srgb, var(--line) 70%, transparent); }
+.slot:hover { background: var(--accent-soft); }
+.readonly .slot { cursor: default; }
+.readonly .slot:hover { background: none; }
+.we { position: absolute; border-radius: 8px; padding: 3px 7px; display: block; overflow: hidden; cursor: pointer; font-size: .78rem; line-height: 1.28; border-inline-start: 4px solid currentColor; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.we > * { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.we b { color: var(--ink); font-size: .86rem; }
+.we .wt { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 500; }
+.we .ws { font-weight: 600; }
+.we:hover { filter: brightness(.97); z-index: 2; }
+.we.paid { background: var(--good-soft); color: var(--good); }
+.we.due, .we.part { background: var(--bad-soft); color: var(--bad); }
+.we.future { background: var(--accent-soft); color: var(--accent); }
+.we.none { background: var(--surface-2); color: var(--muted); }
+.we.none b { text-decoration: line-through; color: var(--muted); }
+.now { position: absolute; inset-inline: 0; height: 2px; background: var(--bad); z-index: 3; pointer-events: none; }
+.now::before { content: ""; position: absolute; inset-inline-start: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--bad); }
+.ev .et { font-family: var(--f-num); font-weight: 500; margin-inline-end: 5px; }
+.strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.sd { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 0; display: grid; justify-items: center; gap: 0; position: relative; min-width: 0; }
+.sd span { font-size: .78rem; color: var(--muted); font-weight: 600; }
+.sd b { font-family: var(--f-num); font-weight: 500; font-size: 1.05rem; }
+.sd small { font-size: .72rem; color: var(--accent); font-weight: 600; }
+.sd i { position: absolute; top: 3px; inset-inline-end: 4px; font-style: normal; font-size: .68rem; background: var(--accent); color: var(--accent-ink); border-radius: 999px; min-width: 16px; line-height: 16px; text-align: center; }
+.sd.today b { color: var(--accent); font-weight: 700; }
+.sd.sel { border-color: var(--accent); background: var(--accent-soft); }
+.sd.sat { background: var(--surface-2); }
+.dtop { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.hdn { font-size: .75rem; color: var(--accent); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdn.rc { background: var(--accent-soft); border-radius: 6px; padding: 0 5px; }
+@media (max-width: 700px) {
+  .wk { --hh: 72px; grid-template-columns: 50px minmax(0, 1fr); }
+  .wh .gd b { font-size: 1.1rem; }
+  .cal .dtop { flex-direction: column; gap: 0; }
+  .hdn { font-size: .68rem; }
+}
 
 /* forms */
 .form { display: grid; gap: 14px; }
@@ -365,15 +428,59 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
+  // ---------- Hebrew calendar ----------
+  const GEM = [["ת", 400], ["ש", 300], ["ר", 200], ["ק", 100], ["צ", 90], ["פ", 80], ["ע", 70], ["ס", 60], ["נ", 50], ["מ", 40], ["ל", 30], ["כ", 20], ["י", 10], ["ט", 9], ["ח", 8], ["ז", 7], ["ו", 6], ["ה", 5], ["ד", 4], ["ג", 3], ["ב", 2], ["א", 1]];
+  function gem(n) {
+    n = n % 1000; let out = "";
+    for (const [l, v] of GEM) {
+      while (n >= v) {
+        if (n === 15) { out += "טו"; n = 0; break; }
+        if (n === 16) { out += "טז"; n = 0; break; }
+        out += l; n -= v;
+      }
+    }
+    return out.length === 1 ? out + "׳" : out.slice(0, -1) + "״" + out.slice(-1);
+  }
+  let hebFmt = null;
+  try { hebFmt = new Intl.DateTimeFormat("he-IL-u-ca-hebrew", { day: "numeric", month: "long", year: "numeric" }); } catch (e) { /* no Hebrew calendar */ }
+  const hebCache = new Map();
+  function heb(iso) {
+    let r = hebCache.get(iso); if (r) return r;
+    r = { dayNum: 0, day: "", month: "", year: "" };
+    if (hebFmt) {
+      const [y, m, d] = iso.split("-").map(Number);
+      const parts = hebFmt.formatToParts(new Date(y, m - 1, d, 12));
+      const get = (t) => (parts.find((p) => p.type === t) || {}).value || "";
+      const dn = Number(get("day")), yn = Number(get("year"));
+      r = { dayNum: dn, day: dn ? gem(dn) : get("day"), month: get("month"), year: yn ? gem(yn) : get("year") };
+    }
+    hebCache.set(iso, r);
+    return r;
+  }
+  const addDays = (iso, n) => { const [y, m, d] = iso.split("-").map(Number); return isoDate(new Date(y, m - 1, d + n)); };
+  const sundayOf = (iso) => { const [y, m, d] = iso.split("-").map(Number); return addDays(iso, -new Date(y, m - 1, d).getDay()); };
+  function gregRange(a, b) {
+    const [ya, ma, da] = a.split("-").map(Number), [yb, mb, db] = b.split("-").map(Number);
+    const mn = (yy, mm) => monthName(yy + "-" + pad(mm), { month: "long" });
+    if (ma === mb) return '<bdi dir="ltr">' + da + "–" + db + "</bdi> ב" + mn(ya, ma) + " " + ya;
+    return da + " ב" + mn(ya, ma) + (ya !== yb ? " " + ya : "") + " – " + db + " ב" + mn(yb, mb) + " " + yb;
+  }
+  function hebRange(a, b) {
+    const x = heb(a), y = heb(b);
+    if (!x.month) return "";
+    if (x.month === y.month) return x.day + "–" + y.day + " ב" + x.month + " " + y.year;
+    return x.day + " ב" + x.month + (x.year !== y.year ? " " + x.year : "") + " – " + y.day + " ב" + y.month + " " + y.year;
+  }
+
   // ---------- state ----------
   const S = {
     db: null, downloads: null, canWrite: true, ready: false, noDb: false,
-    settings: { clinicName: "", defaultPrice: 400 },
+    settings: { clinicName: "", defaultPrice: 400, dayStart: 8, dayEnd: 21, sessionLength: 50 },
     patients: new Map(), sessions: new Map(),
     month: ymOf(todayISO()), tab: "dash", filter: "all",
-    sview: "cal", patientFilter: "", selDay: "", pSearch: "", pFilter: "active",
+    sview: "week", weekStart: "", patientFilter: "", selDay: "", pSearch: "", pFilter: "active",
   };
-  try { const t = localStorage.getItem("gvia-tab"); if (t) S.tab = t; const sv = localStorage.getItem("gvia-sview"); if (sv) S.sview = sv; } catch (e) { /* storage unavailable */ }
+  try { const t = localStorage.getItem("gvia-tab"); if (t) S.tab = t; const sv = localStorage.getItem("gvia-sview"); if (sv === "week" || sv === "month" || sv === "list") S.sview = sv; } catch (e) { /* storage unavailable */ }
 
   const charge = (s) => (s.status === "free" ? 0 : Number(s.price) || 0);
   const paidOf = (s) => (s.payments || []).reduce((a, p) => a + (Number(p.amount) || 0), 0);
@@ -381,6 +488,11 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
   const isFuture = (s) => s.date > todayISO();
   const patientName = (id) => { const p = S.patients.get(id); return p ? p.name : "מטופלת שנמחקה"; };
   const byDateDesc = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+  const timeOf = (s) => { if (!s.time || !/^\d{1,2}:\d{2}$/.test(s.time)) return null; const [h, m] = s.time.split(":").map(Number); return h * 60 + m; };
+  const durOf = (s) => Number(s.duration) || Number(S.settings.sessionLength) || 50;
+  const fmtT = (min) => pad(Math.floor(min / 60) % 24) + ":" + pad(min % 60);
+  const byDateTime = (a, b) => (a.date !== b.date ? (a.date < b.date ? -1 : 1) : (a.time || "99") < (b.time || "99") ? -1 : (a.time || "99") > (b.time || "99") ? 1 : 0);
+  const byDateTimeDesc = (a, b) => byDateTime(b, a);
   const sortedSessions = () => Array.from(S.sessions.values()).sort(byDateDesc);
 
   function payState(s) {
@@ -595,7 +707,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     if (s.note) subBits.push(esc(s.note));
     const title = noName ? STATUS[s.status] : esc(patientName(s.patientId));
     let h = '<div class="tr" data-edit="' + esc(s.id) + '">' +
-      '<div class="dt">' + shortDate(s.date) + "<small>" + esc(weekday(s.date)) + "</small></div>" +
+      '<div class="dt">' + shortDate(s.date) + "<small>" + (s.time ? '<b class="num">' + s.time + "</b> · " : "") + esc(weekday(s.date).replace("יום ", "")) + "</small></div>" +
       '<div class="nm">' + title + (subBits.length ? '<span class="sub">' + subBits.join(" · ") + "</span>" : "") + "</div>" +
       '<div class="amtc"><div class="amt">' + money(charge(s)) + "</div>" + (paid > 0 && bal > 0 ? '<div class="sub amt" style="color:var(--bad)">נותרו ' + money(bal) + "</div>" : "") + "</div>" +
       '<div class="stc"><span class="st ' + st.cls + '">' + st.label + "</span>" + viaHTML(s) + (receipts.length ? '<span class="sub">קבלה ' + esc(receipts.join(", ")) + "</span>" : "") + "</div>";
@@ -619,13 +731,19 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
 
   function viewSessions() {
     if (S.patientFilter && !S.patients.has(S.patientFilter)) S.patientFilter = "";
-    const base = Array.from(S.sessions.values()).filter((s) => ymOf(s.date) === S.month && (!S.patientFilter || s.patientId === S.patientFilter));
+    syncWeek();
+    const week = S.sview === "week";
+    const from = week ? S.weekStart : S.month + "-01";
+    const to = week ? addDays(S.weekStart, 6) : S.month + "-31";
+    const base = Array.from(S.sessions.values()).filter((s) => s.date >= from && s.date <= to && (!S.patientFilter || s.patientId === S.patientFilter));
     const dueN = base.filter((s) => balOf(s) > 0).length;
     const counts = { all: base.length, due: dueN, paid: base.length - dueN };
-    const list = base.filter(sessionFilterMatch).sort(byDateDesc);
+    const list = base.filter(sessionFilterMatch);
 
-    let h = '<section class="card"><div class="card-h"><h2>פגישות ' + esc(monthName(S.month)) + "</h2>" +
-      '<div class="chips" role="group" aria-label="תצוגה"><button type="button" data-sview="cal" aria-pressed="' + (S.sview === "cal") + '">לוח שנה</button><button type="button" data-sview="list" aria-pressed="' + (S.sview === "list") + '">רשימה</button></div></div>' +
+    let h = '<section class="card"><div class="card-h"><h2>' + (week ? "יומן שבועי" : "פגישות " + esc(monthName(S.month))) + "</h2>" +
+      '<div class="chips" role="group" aria-label="תצוגה">' +
+      ["week:שבוע", "month:חודש", "list:רשימה"].map((x) => { const [k, l] = x.split(":"); return '<button type="button" data-sview="' + k + '" aria-pressed="' + (S.sview === k) + '">' + l + "</button>"; }).join("") +
+      "</div></div>" +
       '<div class="card-b" style="display:grid;gap:14px">' +
       '<div class="toolbar">' + patientSelectHTML() + '<div class="chips">' + fbtn("all", "הכל", counts.all) + fbtn("due", "ממתינות לתשלום", counts.due) + fbtn("paid", "שולמו", counts.paid) + "</div></div>";
 
@@ -638,53 +756,150 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
         '<button type="button" class="btn small" id="clear-pf">הצגת כולן</button></div>';
     }
 
-    if (S.sview === "cal") h += calendarHTML(list);
+    if (S.sview === "week") h += weekHTML(list);
+    else if (S.sview === "month") h += monthHTML(list);
     else if (!list.length) {
       h += '<div class="empty"><span>' + (counts.all ? "אין פגישות שמתאימות לסינון." : "אין פגישות ב" + esc(monthName(S.month)) + (S.patientFilter ? " למטופלת הזו" : "") + ".") + '</span><button type="button" class="btn primary write-only" data-new-session="">' + icon("i-plus") + "הוספת פגישה</button></div>";
     } else {
       h += '<p class="note write-only">לחיצה על אשראי / מזומן / העברה מסמנת שהפגישה שולמה.</p>' +
-        '<div class="tbl sess"><div class="tr th"><span>תאריך</span><span>מטופלת</span><span style="text-align:left">סכום</span><span>מצב</span><span style="text-align:left" class="write-only">סימון תשלום</span></div>' + list.map((s) => sessionRow(s)).join("") + "</div>";
+        '<div class="tbl sess"><div class="tr th"><span>תאריך</span><span>מטופלת</span><span style="text-align:left">סכום</span><span>מצב</span><span style="text-align:left" class="write-only">סימון תשלום</span></div>' + list.sort(byDateTimeDesc).map((s) => sessionRow(s)).join("") + "</div>";
     }
     return h + "</div></section>";
   }
 
-  function calendarHTML(list) {
+  const LEGEND = '<div class="legend-row"><span class="st paid">שולם</span><span class="st due">לא שולם</span><span class="st future">טרם התקיימה</span><span class="st none">ללא חיוב</span></div>';
+  const WD_SHORT = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+  const WD_NAME = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+  const dow = (iso) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1, d).getDay(); };
+  const narrow = () => window.matchMedia("(max-width: 700px)").matches;
+
+  function groupByDay(list) {
+    const byDay = new Map();
+    list.slice().sort(byDateTime).forEach((s) => { if (!byDay.has(s.date)) byDay.set(s.date, []); byDay.get(s.date).push(s); });
+    return byDay;
+  }
+
+  function syncWeek() {
+    const today = todayISO();
+    if (!S.weekStart || (ymOf(S.weekStart) !== S.month && ymOf(addDays(S.weekStart, 6)) !== S.month)) {
+      S.weekStart = sundayOf(ymOf(today) === S.month ? today : S.month + "-01");
+    }
+  }
+
+  function layoutDay(evs) {
+    const out = []; let cluster = [], lanesEnd = [], clusterEnd = -1;
+    const flush = () => { cluster.forEach((o) => { o.lanes = lanesEnd.length; }); cluster = []; lanesEnd = []; };
+    evs.forEach((s) => {
+      const st = timeOf(s), en = st + durOf(s);
+      if (st >= clusterEnd) { flush(); clusterEnd = -1; }
+      let lane = lanesEnd.findIndex((e) => e <= st);
+      if (lane < 0) { lane = lanesEnd.length; lanesEnd.push(en); } else lanesEnd[lane] = en;
+      const o = { s, st, en, lane }; cluster.push(o); out.push(o);
+      clusterEnd = Math.max(clusterEnd, en);
+    });
+    flush();
+    return out;
+  }
+
+  function evChip(s) {
+    const st = payState(s);
+    return '<span class="ev ' + st.cls + '" data-edit="' + esc(s.id) + '" title="' + esc(patientName(s.patientId)) + " · " + st.label + '">' + (s.time ? '<span class="et">' + s.time + "</span>" : "") + esc(patientName(s.patientId)) + "</span>";
+  }
+
+  function weekHTML(list) {
+    const today = todayISO();
+    const days = []; for (let i = 0; i < 7; i++) days.push(addDays(S.weekStart, i));
+    if (!days.includes(S.selDay)) S.selDay = days.includes(today) ? today : days[0];
+    const byDay = groupByDay(list);
+    const showDays = narrow() ? [S.selDay] : days;
+    let startH = Number(S.settings.dayStart), endH = Number(S.settings.dayEnd);
+    showDays.forEach((d) => (byDay.get(d) || []).forEach((s) => { const t = timeOf(s); if (t == null) return; startH = Math.min(startH, Math.floor(t / 60)); endH = Math.max(endH, Math.ceil((t + durOf(s)) / 60)); }));
+    endH = Math.min(24, Math.max(endH, startH + 1));
+
+    let h = '<div class="wk-nav"><button type="button" class="btn icon-btn" data-wk="-1" aria-label="השבוע הקודם">' + icon("i-prev") + "</button>" +
+      '<div class="wk-title"><b>' + gregRange(days[0], days[6]) + "</b><span>" + hebRange(days[0], days[6]) + "</span></div>" +
+      '<button type="button" class="btn icon-btn" data-wk="1" aria-label="השבוע הבא">' + icon("i-next") + "</button>" +
+      '<button type="button" class="btn small" data-wk="0">היום</button></div>';
+    h += LEGEND;
+    if (narrow()) {
+      h += '<div class="strip">' + days.map((d, i) => {
+        const n = (byDay.get(d) || []).length;
+        return '<button type="button" class="sd' + (d === S.selDay ? " sel" : "") + (d === today ? " today" : "") + (i === 6 ? " sat" : "") + '" data-day="' + d + '"><span>' + WD_SHORT[i] + "</span><b>" + Number(d.slice(8)) + "</b><small>" + heb(d).day + "</small>" + (n ? '<i class="num">' + n + "</i>" : "") + "</button>";
+      }).join("") + "</div>";
+    }
+
+    const untimed = showDays.some((d) => (byDay.get(d) || []).some((s) => timeOf(s) == null));
+    h += '<div class="wk-wrap"><div class="wk" style="--cols:' + showDays.length + '">';
+    // header
+    h += '<div class="wk-corner"></div>' + showDays.map((d) => {
+      const i = dow(d), hb = heb(d);
+      return '<div class="wh' + (d === today ? " today" : "") + (d === S.selDay ? " sel" : "") + (i === 6 ? " sat" : "") + '" data-day="' + d + '" tabindex="0"><span class="wn">' + WD_NAME[i] + '</span><span class="gd"><b>' + Number(d.slice(8)) + "</b> " + esc(monthName(ymOf(d), { month: "short" })) + '</span><span class="hd">' + hb.day + " " + esc(hb.month) + "</span></div>";
+    }).join("");
+    if (untimed) {
+      h += '<div class="wk-allday-l">ללא שעה</div>' + showDays.map((d) => '<div class="wk-allday' + (dow(d) === 6 ? " sat" : "") + '">' + (byDay.get(d) || []).filter((s) => timeOf(s) == null).map(evChip).join("") + "</div>").join("");
+    }
+    // body
+    const hours = endH - startH;
+    h += '<div class="wk-hours" style="--hours:' + hours + '">';
+    for (let k = startH; k < endH; k++) h += "<span>" + pad(k) + ":00</span>";
+    h += "</div>";
+    const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+    showDays.forEach((d) => {
+      h += '<div class="wk-col' + (dow(d) === 6 ? " sat" : "") + (d === today ? " today" : "") + '" style="--hours:' + hours + '">';
+      for (let k = startH; k < endH; k++) h += '<div class="slot" data-slot="' + d + "|" + pad(k) + ':00"></div><div class="slot half" data-slot="' + d + "|" + pad(k) + ':30"></div>';
+      const timed = (byDay.get(d) || []).filter((s) => timeOf(s) != null);
+      layoutDay(timed).forEach((o) => {
+        const st = payState(o.s);
+        h += '<div class="we ' + st.cls + '" data-edit="' + esc(o.s.id) + '" title="' + esc(patientName(o.s.patientId)) + " · " + fmtT(o.st) + "–" + fmtT(o.en) + " · " + st.label + '" style="top:calc(' + ((o.st - startH * 60) / 60) + " * var(--hh) + 1px);height:calc(" + (Math.max(o.en - o.st, 25) / 60) + " * var(--hh) - 3px);inset-inline-start:calc(" + o.lane + " * 100% / " + o.lanes + " + 2px);width:calc(100% / " + o.lanes + ' - 4px)">' +
+          '<span class="wt"><bdi dir="ltr">' + fmtT(o.st) + (o.lanes > 1 ? "" : "–" + fmtT(o.en)) + '</bdi></span><b>' + esc(patientName(o.s.patientId)) + '</b><span class="ws">' + st.label + "</span></div>";
+      });
+      if (d === today && nowMin >= startH * 60 && nowMin <= endH * 60) h += '<div class="now" style="top:calc(' + ((nowMin - startH * 60) / 60) + ' * var(--hh))"></div>';
+      h += "</div>";
+    });
+    h += "</div></div>";
+    h += '<p class="note write-only">לחיצה על משבצת ריקה פותחת פגישה חדשה בשעה הזו. לחיצה על פגישה פותחת אותה לעריכה.</p>';
+    h += dayPanelHTML(byDay);
+    return h;
+  }
+
+  function monthHTML(list) {
     const [y, m] = S.month.split("-").map(Number);
-    const first = new Date(y, m - 1, 1).getDay(); // 0 = Sunday
+    const first = new Date(y, m - 1, 1).getDay();
     const days = new Date(y, m, 0).getDate();
     const today = todayISO();
     if (!S.selDay || ymOf(S.selDay) !== S.month) S.selDay = ymOf(today) === S.month ? today : "";
-    const byDay = new Map();
-    list.slice().sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : patientName(a.patientId).localeCompare(patientName(b.patientId), "he"))).forEach((s) => {
-      if (!byDay.has(s.date)) byDay.set(s.date, []);
-      byDay.get(s.date).push(s);
-    });
-    let h = '<div class="legend-row"><span class="st paid">שולם</span><span class="st due">לא שולם</span><span class="st future">טרם התקיימה</span><span class="st none">ללא חיוב</span></div>';
-    h += '<div class="cal" role="grid">' + ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"].map((d) => '<div class="wd" role="columnheader">' + d + "</div>").join("");
+    const byDay = groupByDay(list);
+    const hf = heb(S.month + "-01"), hl = heb(S.month + "-" + pad(days));
+    let h = '<div class="wk-nav"><div class="wk-title"><b>' + esc(monthName(S.month)) + "</b><span>" + esc(hf.month) + (hf.month !== hl.month ? "–" + esc(hl.month) : "") + " " + hl.year + "</span></div></div>" + LEGEND;
+    h += '<div class="cal" role="grid">' + WD_NAME.map((d) => '<div class="wd" role="columnheader">' + d + "</div>").join("");
     for (let i = 0; i < first; i++) h += '<div class="day out" aria-hidden="true"></div>';
     for (let d = 1; d <= days; d++) {
       const iso = S.month + "-" + pad(d);
       const evs = byDay.get(iso) || [];
-      const cls = "day" + (iso === today ? " today" : "") + (iso === S.selDay ? " sel" : "") + (new Date(y, m - 1, d).getDay() === 6 ? " sat" : "");
-      h += '<div class="' + cls + '" role="gridcell" tabindex="0" data-day="' + iso + '" aria-label="' + d + " ב" + esc(monthName(S.month, { month: "long" })) + (evs.length ? ", " + plural(evs.length, "פגישה אחת", "פגישות") : "") + '"><span class="dn">' + d + "</span>";
-      evs.slice(0, 3).forEach((s) => { const st = payState(s); h += '<span class="ev ' + st.cls + '" data-edit="' + esc(s.id) + '" title="' + esc(patientName(s.patientId)) + " · " + st.label + '">' + esc(patientName(s.patientId)) + "</span>"; });
-      if (evs.length > 3) h += '<span class="more">+' + (evs.length - 3) + " נוספות</span>";
+      const hb = heb(iso);
+      const cls = "day" + (iso === today ? " today" : "") + (iso === S.selDay ? " sel" : "") + (dow(iso) === 6 ? " sat" : "");
+      h += '<div class="' + cls + '" role="gridcell" tabindex="0" data-day="' + iso + '" aria-label="' + d + " ב" + esc(monthName(S.month, { month: "long" })) + ", " + hb.day + " ב" + esc(hb.month) + (evs.length ? ", " + plural(evs.length, "פגישה אחת", "פגישות") : "") + '">' +
+        '<div class="dtop"><span class="dn">' + d + '</span><span class="hdn' + (hb.dayNum === 1 ? " rc" : "") + '">' + hb.day + (hb.dayNum === 1 || d === 1 ? " " + esc(hb.month) : "") + "</span></div>";
+      evs.slice(0, 4).forEach((s) => { h += evChip(s); });
+      if (evs.length > 4) h += '<span class="more">+' + (evs.length - 4) + " נוספות</span>";
       if (evs.length) h += '<span class="dots">' + evs.map((s) => '<i class="' + payState(s).cls + '"></i>').join("") + "</span>";
       h += "</div>";
     }
     const tail = (7 - ((first + days) % 7)) % 7;
     for (let i = 0; i < tail; i++) h += '<div class="day out" aria-hidden="true"></div>';
     h += "</div>";
-
-    // selected day panel
-    if (S.selDay) {
-      const evs = byDay.get(S.selDay) || [];
-      const [, mm, dd] = S.selDay.split("-").map(Number);
-      h += '<div class="daypanel"><div class="panel-h"><h3>' + esc(weekday(S.selDay)) + ", " + dd + " ב" + esc(monthName(S.month, { month: "long" })) + '</h3><button type="button" class="btn small write-only" data-new-day="' + S.selDay + '">' + icon("i-plus") + "פגישה ביום הזה</button></div>";
-      h += evs.length ? '<div class="tbl sess">' + evs.map((s) => sessionRow(s)).join("") + "</div>" : '<p class="note">אין פגישות ביום הזה.</p>';
-      h += "</div>";
-    } else h += '<p class="note">בחרי יום בלוח כדי לראות את הפגישות שלו ולסמן תשלומים.</p>';
+    if (S.selDay) h += dayPanelHTML(byDay);
+    else h += '<p class="note">בחרי יום בלוח כדי לראות את הפגישות שלו ולסמן תשלומים.</p>';
     return h;
+  }
+
+  function dayPanelHTML(byDay) {
+    const evs = byDay.get(S.selDay) || [];
+    const hb = heb(S.selDay);
+    let h = '<div class="daypanel"><div class="panel-h"><h3>יום ' + WD_NAME[dow(S.selDay)] + ", " + Number(S.selDay.slice(8)) + " ב" + esc(monthName(ymOf(S.selDay), { month: "long" })) + ' <span class="sub">· ' + hb.day + " ב" + esc(hb.month) + " " + hb.year + "</span></h3>" +
+      '<button type="button" class="btn small write-only" data-new-day="' + S.selDay + '">' + icon("i-plus") + "פגישה ביום הזה</button></div>";
+    h += evs.length ? '<div class="tbl sess">' + evs.map((s) => sessionRow(s)).join("") + "</div>" : '<p class="note">אין פגישות ביום הזה.</p>';
+    return h + "</div>";
   }
 
   function fbtn(k, label, n) { return '<button type="button" data-filter="' + k + '" aria-pressed="' + (S.filter === k) + '">' + label + '<span class="n">' + n + "</span></button>"; }
@@ -741,12 +956,20 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     return h + "</div>";
   }
 
+  // a sample session the user moved to a real patient is theirs now
+  function isExampleSession(x) { const p = S.patients.get(x.patientId); return !!x.example && (!p || !!p.example); }
+
+  function hourOpts(a, b, v) { let o = ""; for (let k = a; k <= b; k++) o += '<option value="' + k + '"' + (Number(v) === k ? " selected" : "") + ">" + pad(k) + ":00</option>"; return o; }
+
   function viewSettings() {
-    const ex = Array.from(S.patients.values()).filter((p) => p.example).length + Array.from(S.sessions.values()).filter((s) => s.example).length;
+    const ex = Array.from(S.patients.values()).filter((p) => p.example).length + Array.from(S.sessions.values()).filter(isExampleSession).length;
     let h = '<div class="stack"><div class="cols">';
     h += '<section class="card"><div class="card-h"><h2>הגדרות הקליניקה</h2></div><div class="card-b form">' +
       '<div class="field"><label for="set-name">שם הקליניקה (מופיע בראש הדף)</label><input id="set-name" value="' + esc(S.settings.clinicName) + '" placeholder="לדוגמה: הקליניקה של רחל"></div>' +
       '<div class="field"><label for="set-price">מחיר ברירת מחדל לפגישה (₪)</label><input id="set-price" type="number" min="0" step="10" inputmode="numeric" value="' + esc(S.settings.defaultPrice) + '"></div>' +
+      '<div class="fr"><div class="field"><label for="set-start">היומן מתחיל בשעה</label><select id="set-start">' + hourOpts(5, 14, S.settings.dayStart) + '</select></div>' +
+      '<div class="field"><label for="set-end">ומסתיים בשעה</label><select id="set-end">' + hourOpts(12, 24, S.settings.dayEnd) + '</select></div>' +
+      '<div class="field"><label for="set-len">אורך פגישה רגיל (דקות)</label><input id="set-len" type="number" min="5" step="5" inputmode="numeric" value="' + esc(S.settings.sessionLength) + '"></div></div>' +
       '<div><button type="button" class="btn primary write-only" id="save-settings">שמירת הגדרות</button></div>' +
       '<p class="note">שינוי המחיר חל על פגישות חדשות בלבד.</p></div></section>';
 
@@ -793,16 +1016,18 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     return '<option value="">בחרי מטופלת…</option>' + ps.map((p) => '<option value="' + esc(p.id) + '"' + (p.id === selected ? " selected" : "") + ">" + esc(p.name) + "</option>").join("") + '<option value="__new">+ מטופלת חדשה…</option>';
   }
 
-  function openSession(sid, presetPatient, presetDate) {
+  function openSession(sid, presetPatient, presetDate, presetTime) {
     const existing = sid ? S.sessions.get(sid) : null;
-    const s = existing ? plain(existing) : { patientId: presetPatient || "", date: presetDate || (S.month === ymOf(todayISO()) ? todayISO() : S.month + "-01"), price: Number(S.settings.defaultPrice) || 400, status: "held", note: "", payments: [] };
+    const s = existing ? plain(existing) : { patientId: presetPatient || "", date: presetDate || (S.month === ymOf(todayISO()) ? todayISO() : S.month + "-01"), price: Number(S.settings.defaultPrice) || 400, time: presetTime || "", duration: Number(S.settings.sessionLength) || 50, status: "held", note: "", payments: [] };
     const payments = (s.payments || []).slice();
     const ro = !S.canWrite;
     const html = dlgHead(existing ? "עריכת פגישה" : "פגישה חדשה") +
       '<div class="form">' +
       '<div class="field"><label for="f-patient">מטופלת</label><select id="f-patient">' + patientOptions(s.patientId) + "</select></div>" +
       '<div class="field" id="f-newp-wrap" hidden><label for="f-newp">שם המטופלת החדשה</label><input id="f-newp" placeholder="שם מלא"></div>' +
-      '<div class="fr"><div class="field"><label for="f-date">תאריך הפגישה</label><input id="f-date" type="date" value="' + esc(s.date) + '"></div>' +
+      '<div class="fr"><div class="field"><label for="f-date">תאריך הפגישה</label><input id="f-date" type="date" value="' + esc(s.date) + '"><span class="sub" id="f-hdate"></span></div>' +
+      '<div class="field"><label for="f-time">שעה</label><input id="f-time" type="time" step="300" value="' + esc(s.time || "") + '"></div>' +
+      '<div class="field"><label for="f-dur">משך (דקות)</label><input id="f-dur" type="number" min="5" step="5" inputmode="numeric" value="' + esc(s.duration || durOf(s)) + '"></div>' +
       '<div class="field"><label for="f-price">מחיר (₪)</label><input id="f-price" type="number" min="0" step="10" inputmode="numeric" value="' + esc(s.price) + '"></div></div>' +
       '<div class="field"><span class="lab">סטטוס</span>' + segHTML("f-status", [{ v: "held", l: STATUS.held }, { v: "late", l: STATUS.late }, { v: "free", l: STATUS.free }], s.status) + "</div>" +
       '<div class="section"><h3>תשלום</h3><div class="paylist" id="f-paylist"></div>' +
@@ -831,6 +1056,8 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       wireSeg("f-method", (v) => { $("#f-paydetails").hidden = v === "none"; drawPays(); });
       $("#f-amount").addEventListener("input", (e) => { e.target.dataset.touched = "1"; });
       $("#f-price").addEventListener("input", drawPays);
+      const showHeb = () => { const v = $("#f-date").value; const hb = /^\d{4}-\d{2}-\d{2}$/.test(v) ? heb(v) : null; $("#f-hdate").textContent = hb && hb.month ? hb.day + " ב" + hb.month + " " + hb.year : ""; };
+      showHeb(); $("#f-date").addEventListener("input", showHeb);
       $("#f-patient").addEventListener("change", (e) => { $("#f-newp-wrap").hidden = e.target.value !== "__new"; if (e.target.value === "__new") $("#f-newp").focus(); });
       if (ro) { $$("input,select,textarea", body).forEach((x) => (x.disabled = true)); $("#f-newpay").hidden = true; return; }
       const del = $("#f-del");
@@ -861,11 +1088,11 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
             await setDoc("patients", npid, { name: $("#f-newp").value.trim(), phone: "", note: "", active: true, createdAt: todayISO() });
             pid = npid;
           }
-          const data = Object.assign({}, existing ? plain(existing) : { createdAt: todayISO() }, { patientId: pid, date, price, status: segVal("f-status"), note: $("#f-note").value.trim(), payments: finalPays });
+          const data = Object.assign({}, existing ? plain(existing) : { createdAt: todayISO() }, { patientId: pid, date, price, status: segVal("f-status"), time: $("#f-time").value || "", duration: Number($("#f-dur").value) || durOf({}), note: $("#f-note").value.trim(), payments: finalPays });
           await setDoc("sessions", sid || newId("sessions"), data);
           closeDlg();
           toast(existing ? "הפגישה עודכנה" : "הפגישה נוספה");
-          if (!existing && ymOf(date) !== S.month) { S.month = ymOf(date); render(); }
+          if (!existing) { S.selDay = date; S.month = ymOf(date); if (date < S.weekStart || date > addDays(S.weekStart, 6)) S.weekStart = sundayOf(date); render(); }
         } catch (e) { $("#f-save").disabled = false; }
       });
     });
@@ -970,9 +1197,9 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       list.sort((a, b) => (a[0] < b[0] ? -1 : 1)).forEach((r) => { r[0] = fmtDate(r[0]); r[5] = fmtDate(r[5]); rows.push(r); });
       name = "payments-" + tag + ".csv";
     } else {
-      rows = [["תאריך", "מטופלת", "סטטוס", "חיוב", "שולם", "יתרה", "אמצעי תשלום", "מספרי קבלה", "הערה"]];
-      sortedSessions().reverse().filter((s) => inRange(s.date, range)).forEach((s) => {
-        rows.push([fmtDate(s.date), patientName(s.patientId), STATUS[s.status], charge(s), paidOf(s), balOf(s), Array.from(new Set((s.payments || []).map((p) => mLabel(p.method)))).join(" + "), (s.payments || []).map((p) => p.receipt).filter(Boolean).join(" "), s.note || ""]);
+      rows = [["תאריך", "שעה", "מטופלת", "סטטוס", "חיוב", "שולם", "יתרה", "אמצעי תשלום", "מספרי קבלה", "הערה"]];
+      Array.from(S.sessions.values()).sort(byDateTime).filter((s) => inRange(s.date, range)).forEach((s) => {
+        rows.push([fmtDate(s.date), s.time || "", patientName(s.patientId), STATUS[s.status], charge(s), paidOf(s), balOf(s), Array.from(new Set((s.payments || []).map((p) => mLabel(p.method)))).join(" + "), (s.payments || []).map((p) => p.receipt).filter(Boolean).join(" "), s.note || ""]);
       });
       name = "sessions-" + tag + ".csv";
     }
@@ -994,6 +1221,15 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const op = t.closest("[data-open-patient]"); if (op) { openPatient(op.dataset.openPatient); return; }
     const ed = t.closest("[data-edit]"); if (ed) { openSession(ed.dataset.edit); return; }
     const nd = t.closest("[data-new-day]"); if (nd) { openSession(null, S.patientFilter, nd.dataset.newDay); return; }
+    const sl = t.closest("[data-slot]"); if (sl) { if (!S.canWrite) return; const [d, tm] = sl.dataset.slot.split("|"); S.selDay = d; openSession(null, S.patientFilter, d, tm); return; }
+    const wk = t.closest("[data-wk]");
+    if (wk) {
+      const k = Number(wk.dataset.wk);
+      if (k === 0) { S.weekStart = sundayOf(todayISO()); S.selDay = todayISO(); }
+      else { S.weekStart = addDays(S.weekStart, 7 * k); S.selDay = addDays(S.selDay || S.weekStart, 7 * k); }
+      S.month = ymOf(addDays(S.weekStart, 3));
+      render(); return;
+    }
     const dy = t.closest("[data-day]"); if (dy) { S.selDay = dy.dataset.day; render(); return; }
     const f = t.closest("[data-filter]"); if (f) { S.filter = f.dataset.filter; render(); return; }
     const pf = t.closest("[data-pfilter]"); if (pf) { S.pFilter = pf.dataset.pfilter; render(); return; }
@@ -1006,14 +1242,14 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     if (t.closest("#save-settings")) {
       const price = Number($("#set-price").value);
       if (!(price >= 0)) { toast("המחיר צריך להיות מספר."); return; }
-      try { await queueWrite("settings/main", () => S.db.doc("settings/main").set({ clinicName: $("#set-name").value.trim(), defaultPrice: price })).catch(writeErr); toast("ההגדרות נשמרו"); } catch (err) { /* reported */ }
+      try { await queueWrite("settings/main", () => S.db.doc("settings/main").set({ clinicName: $("#set-name").value.trim(), defaultPrice: price, dayStart: Number($("#set-start").value), dayEnd: Math.max(Number($("#set-end").value), Number($("#set-start").value) + 1), sessionLength: Number($("#set-len").value) || 50 })).catch(writeErr); toast("ההגדרות נשמרו"); } catch (err) { /* reported */ }
       return;
     }
     const ce = t.closest("#clear-examples");
     if (ce) { ce.outerHTML = '<div class="confirm">למחוק את כל נתוני הדוגמה? הנתונים שלך לא יימחקו. <button type="button" class="btn small danger" id="clear-examples2">כן, למחוק</button></div>'; return; }
     if (t.closest("#clear-examples2")) {
       try {
-        for (const s of Array.from(S.sessions.values()).filter((x) => x.example)) await delDoc("sessions", s.id);
+        for (const s of Array.from(S.sessions.values()).filter(isExampleSession)) await delDoc("sessions", s.id);
         for (const p of Array.from(S.patients.values()).filter((x) => x.example)) await delDoc("patients", p.id);
         toast("נתוני הדוגמה נמחקו");
       } catch (err) { /* reported */ }
@@ -1032,6 +1268,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const d = e.target.closest && e.target.closest("[data-day]");
     if (d && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); S.selDay = d.dataset.day; render(); const el = $('[data-day="' + S.selDay + '"]'); if (el) el.focus(); }
   });
+  try { window.matchMedia("(max-width: 700px)").addEventListener("change", () => { if (S.tab === "sessions") render(); }); } catch (e) { /* old browser */ }
   // actions inside the patient dialog's session list
   body.addEventListener("click", (e) => {
     if (!e.target.closest("#pp-rows")) return;
@@ -1063,7 +1300,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const onErr = () => { toast("החיבור לנתונים נקטע. רענני את הדף."); };
     db.doc("settings/main").onSnapshot((snap) => {
       const d = snap.exists ? snap.data() : {};
-      S.settings = { clinicName: d.clinicName || "", defaultPrice: d.defaultPrice != null ? d.defaultPrice : 400 };
+      S.settings = { clinicName: d.clinicName || "", defaultPrice: d.defaultPrice != null ? d.defaultPrice : 400, dayStart: d.dayStart != null ? d.dayStart : 8, dayEnd: d.dayEnd != null ? d.dayEnd : 21, sessionLength: d.sessionLength || 50 };
       mark("c");
     }, onErr);
     db.collection("patients").onSnapshot((snap) => {
