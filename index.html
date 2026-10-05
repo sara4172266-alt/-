@@ -3,214 +3,260 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700&family=Rubik:wght@400;500;600&display=swap">
 <style>
-/* Layout: a calm ledger — month bar on top, summary tiles, then the actionable list (debts / sessions); one column on phones. */
+/* Layout: one quiet column — the month's answer first (hero), then who still owes, then detail. Navy is the only hue; red/green only mark debt/paid. */
 :root {
-  --bg: #f5f4f8;
+  --bg: #f3f4f6;
   --surface: #ffffff;
-  --surface-2: #efedf4;
-  --ink: #1d1a24;
-  --ink-2: #57525f;
-  --muted: #858091;
-  --line: #e3e0ea;
-  --accent: #5d3a7a;
+  --surface-2: #f6f7f9;
+  --ink: #18202b;
+  --ink-2: #4a5462;
+  --muted: #7d8694;
+  --line: #e4e7ec;
+  --accent: #1f3b63;
   --accent-ink: #ffffff;
-  --accent-soft: #ece4f3;
-  --good: #1f7a4a;
-  --good-soft: #e1f2e7;
-  --bad: #b4352c;
-  --bad-soft: #fbe6e3;
-  --warn: #8f5a00;
-  --warn-soft: #faefd6;
-  --m-credit: #2a78d6;
-  --m-cash: #eb6834;
-  --m-transfer: #1baf7a;
-  --shadow: 0 1px 2px rgba(40, 25, 60, .06), 0 4px 14px rgba(40, 25, 60, .05);
+  --accent-soft: #e7edf5;
+  --bar: #c5d2e3;
+  --good: #1b7547;
+  --good-soft: #e5f3eb;
+  --bad: #b3261e;
+  --bad-soft: #fcebe9;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .05);
   --f-display: "Frank Ruhl Libre", "David", "Times New Roman", serif;
   --f-body: "Assistant", "Arial Hebrew", Arial, sans-serif;
   --f-num: "Rubik", "Assistant", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16141b; --surface: #201d27; --surface-2: #2a2633; --ink: #f1eef6; --ink-2: #bdb6c9; --muted: #8f889c; --line: #363042;
-    --accent: #b997e0; --accent-ink: #1a1420; --accent-soft: #3a2f4a;
-    --good: #62cf92; --good-soft: #1b3326; --bad: #f08c82; --bad-soft: #3e2120; --warn: #e8b552; --warn-soft: #3a2e15;
-    --m-credit: #3987e5; --m-cash: #d95926; --m-transfer: #199e70;
-    --shadow: 0 1px 2px rgba(0,0,0,.3);
+    --bg: #111418; --surface: #191e25; --surface-2: #1f252d; --ink: #eef1f5; --ink-2: #b9c1cc; --muted: #868f9c; --line: #2b323c;
+    --accent: #93b4e4; --accent-ink: #0f1722; --accent-soft: #1e2a3a; --bar: #344760;
+    --good: #5fc991; --good-soft: #17301f; --bad: #f08c84; --bad-soft: #3a1d1b; --shadow: none;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #16141b; --surface: #201d27; --surface-2: #2a2633; --ink: #f1eef6; --ink-2: #bdb6c9; --muted: #8f889c; --line: #363042;
-  --accent: #b997e0; --accent-ink: #1a1420; --accent-soft: #3a2f4a;
-  --good: #62cf92; --good-soft: #1b3326; --bad: #f08c82; --bad-soft: #3e2120; --warn: #e8b552; --warn-soft: #3a2e15;
-  --m-credit: #3987e5; --m-cash: #d95926; --m-transfer: #199e70;
-  --shadow: 0 1px 2px rgba(0,0,0,.3);
+  --bg: #111418; --surface: #191e25; --surface-2: #1f252d; --ink: #eef1f5; --ink-2: #b9c1cc; --muted: #868f9c; --line: #2b323c;
+  --accent: #93b4e4; --accent-ink: #0f1722; --accent-soft: #1e2a3a; --bar: #344760;
+  --good: #5fc991; --good-soft: #17301f; --bad: #f08c84; --bad-soft: #3a1d1b; --shadow: none;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5; }
-.app { max-width: 1080px; margin: 0 auto; padding: 0 16px; padding-block: 16px 64px; display: grid; gap: 20px; }
+.app { max-width: 1040px; margin: 0 auto; padding: 0 16px; padding-block: 20px 72px; display: grid; gap: 24px; }
 h1, h2, h3 { margin: 0; text-wrap: balance; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 /* header */
-.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
-.brand { display: grid; gap: 0; min-width: 0; }
-.brand h1 { font-family: var(--f-display); font-weight: 700; font-size: 1.75rem; line-height: 1.15; }
-.brand p { margin: 0; color: var(--muted); font-size: .9rem; }
-.month { display: flex; align-items: center; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px; }
-.month button { border: 0; background: transparent; width: 34px; height: 34px; border-radius: 50%; font-size: 1.2rem; line-height: 1; color: var(--ink-2); }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px 16px; }
+.brand h1 { font-family: var(--f-display); font-weight: 700; font-size: 1.7rem; line-height: 1.15; }
+.brand p { margin: 0; color: var(--muted); font-size: .92rem; }
+.month { display: flex; align-items: center; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.month button { border: 0; background: transparent; width: 34px; height: 34px; border-radius: 8px; color: var(--ink-2); display: grid; place-items: center; }
 .month button:hover { background: var(--surface-2); }
-.month b { min-width: 118px; text-align: center; font-weight: 700; }
-.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.month b { min-width: 120px; text-align: center; font-weight: 700; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
 .btn:hover { background: var(--surface-2); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn.primary:hover { filter: brightness(1.08); }
+.btn.primary:hover { filter: brightness(1.1); }
 .btn.danger { color: var(--bad); }
-.btn.small { padding: 4px 10px; font-size: .9rem; border-radius: 8px; }
+.btn.small { padding: 5px 12px; font-size: .9rem; border-radius: 8px; }
 .btn:disabled { opacity: .5; cursor: default; }
+@media (max-width: 640px) {
+  .top { grid-template-columns: minmax(0, 1fr) auto; }
+  .top .month { grid-column: 1 / -1; justify-self: stretch; justify-content: space-between; }
+  .brand h1 { font-size: 1.4rem; }
+}
 
 /* tabs */
-.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--ink-2); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.tabs { display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 4px; overflow-x: auto; }
+.tabs button { flex: 1; border: 0; background: none; padding: 8px 12px; font-weight: 600; color: var(--ink-2); border-radius: 8px; white-space: nowrap; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
 
-/* tiles */
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 2px; box-shadow: var(--shadow); }
-.tile .lbl { color: var(--ink-2); font-size: .9rem; font-weight: 600; letter-spacing: .01em; }
-.tile .val { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
-.tile .sub { color: var(--muted); font-size: .85rem; }
-.tile.bad .val { color: var(--bad); }
-.tile.good .val { color: var(--good); }
-@media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile .val { font-size: 1.4rem; } }
+/* cards */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); min-width: 0; }
+.card-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 16px 20px 0; }
+.card-h h2 { font-size: 1.12rem; font-weight: 700; }
+.card-h .hint { color: var(--muted); font-size: .88rem; }
+.card-b { padding: 12px 20px 18px; }
+.stack { display: grid; gap: 20px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.empty { color: var(--muted); text-align: center; padding: 24px 12px; display: grid; gap: 10px; justify-items: center; }
 
-.grid2 { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
-.panel-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.panel-h h2 { font-family: var(--f-display); font-size: 1.25rem; font-weight: 700; }
-.panel-h .hint { color: var(--muted); font-size: .85rem; }
-.empty { color: var(--muted); text-align: center; padding: 20px 8px; border: 1px dashed var(--line); border-radius: 12px; display: grid; gap: 8px; justify-items: center; }
+/* hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+.hero-main { padding: 22px 24px; display: grid; gap: 6px; align-content: start; }
+.eyebrow { color: var(--ink-2); font-weight: 600; font-size: .95rem; }
+.big { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 2.9rem; font-weight: 500; line-height: 1.1; letter-spacing: -.01em; }
+.progress { height: 10px; background: var(--accent-soft); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+.progress span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.prog-txt { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; color: var(--ink-2); font-size: .92rem; }
+.prog-txt b { color: var(--ink); font-family: var(--f-num); font-weight: 500; }
+.hero-side { border-inline-start: 1px solid var(--line); display: grid; }
+.fig { padding: 18px 24px; display: grid; gap: 2px; align-content: center; }
+.fig + .fig { border-top: 1px solid var(--line); }
+.fig .lbl { color: var(--ink-2); font-weight: 600; font-size: .92rem; }
+.fig b { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 500; font-size: 1.7rem; line-height: 1.2; }
+.fig.bad b { color: var(--bad); }
+.fig.good b { color: var(--good); }
+.fig .s { color: var(--muted); font-size: .88rem; }
+@media (max-width: 720px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .hero-side { border-inline-start: 0; border-top: 1px solid var(--line); grid-template-columns: 1fr 1fr; }
+  .fig + .fig { border-top: 0; border-inline-start: 1px solid var(--line); }
+  .big { font-size: 2.3rem; }
+  .hero-main, .fig { padding-inline: 18px; }
+}
+
+/* list tables */
+.tbl { display: grid; }
+.tr { display: grid; align-items: center; gap: 4px 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.tr:first-child { border-top: 0; }
+.th { color: var(--muted); font-size: .82rem; font-weight: 600; padding-block: 4px 8px; border-top: 0; }
+.amt { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 500; text-align: left; white-space: nowrap; }
+.amt.bad { color: var(--bad); }
+.sub { color: var(--muted); font-size: .86rem; }
+.link { background: none; border: 0; padding: 0; font-weight: 700; text-align: right; color: var(--ink); }
+.link:hover { color: var(--accent); text-decoration: underline; }
 
 /* debts */
-.debt { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
-.debt:first-child { border-top: 0; }
-.debt .who { font-weight: 700; cursor: pointer; }
-.debt .who:hover { text-decoration: underline; }
-.debt .meta { color: var(--muted); font-size: .85rem; grid-column: 1; }
-.debt .amt { color: var(--bad); font-weight: 600; font-family: var(--f-num); font-variant-numeric: tabular-nums; grid-row: 1 / span 2; grid-column: 2; }
-.debt .btn { grid-row: 1 / span 2; grid-column: 3; }
+.debts .tr { grid-template-columns: minmax(0, 1fr) auto auto; }
+.debt-total { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 4px; border-top: 2px solid var(--line); font-weight: 700; }
 
-/* method breakdown */
-.stackbar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
-.stackbar span { display: block; height: 100%; }
-.legend { display: grid; gap: 6px; }
-.legend div { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
-.legend i { width: 12px; height: 12px; border-radius: 3px; }
-.legend .pct { color: var(--muted); font-size: .85rem; min-width: 3.2em; text-align: left; }
+/* methods */
+.mrow { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 3.2em; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.mrow:first-child { border-top: 0; }
+.micon { width: 34px; height: 34px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; grid-row: 1 / span 2; }
+.mrow .mt { font-weight: 600; }
+.mrow .mbar { grid-column: 2 / span 3; height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.mrow .mbar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.mrow .pct { color: var(--muted); font-size: .85rem; text-align: left; font-family: var(--f-num); }
 
 /* chart */
 .chart { position: relative; }
-.chart svg { width: 100%; height: auto; display: block; }
-.chart text { fill: var(--ink-2); font-family: var(--f-num); font-size: 12px; }
-.chart .tot { fill: var(--ink); font-weight: 500; }
-.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { fill: var(--muted); font-family: var(--f-num); font-size: 12px; }
+.chart text.v { fill: var(--ink-2); font-size: 12.5px; }
+.chart text.cur { fill: var(--ink); font-weight: 600; }
+.chart .base { stroke: var(--line); stroke-width: 1; }
+.chart .b { fill: var(--bar); }
+.chart .b.cur { fill: var(--accent); }
 .chart .hit { fill: transparent; }
 .chart .hit:hover, .chart .hit.on { fill: var(--surface-2); }
-.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: .85rem; line-height: 1.4; min-width: 150px; transform: translate(50%, -100%); white-space: nowrap; z-index: 2; }
-.tip .r { display: flex; justify-content: space-between; gap: 12px; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); border-radius: 8px; padding: 8px 12px; font-size: .85rem; line-height: 1.5; min-width: 160px; z-index: 2; }
+.tip .r { display: flex; justify-content: space-between; gap: 14px; }
 
-/* pills & chips */
-.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 1px 10px; font-size: .8rem; font-weight: 700; white-space: nowrap; }
-.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.pill.paid { background: var(--good-soft); color: var(--good); }
-.pill.part { background: var(--warn-soft); color: var(--warn); }
-.pill.due { background: var(--bad-soft); color: var(--bad); }
-.pill.none, .pill.future { background: var(--surface-2); color: var(--ink-2); }
-.mchip { display: inline-flex; align-items: center; gap: 5px; font-size: .85rem; color: var(--ink-2); white-space: nowrap; }
-.mchip i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+/* status */
+.st { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .92rem; white-space: nowrap; }
+.st::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.st.paid { color: var(--good); }
+.st.part, .st.due { color: var(--bad); }
+.st.none, .st.future { color: var(--muted); }
+.via { display: inline-flex; align-items: center; gap: 5px; color: var(--ink-2); font-size: .88rem; white-space: nowrap; }
+.via .ico { width: 15px; height: 15px; }
 
-/* filters */
-.filters { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.filters button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; font-size: .9rem; font-weight: 600; color: var(--ink-2); }
-.filters button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
-.filters .spacer { flex: 1; }
+/* toolbar */
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.toolbar .grow { flex: 1; }
+.chips { display: inline-flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.chips button { border: 0; background: none; border-radius: 8px; padding: 5px 12px; font-size: .92rem; font-weight: 600; color: var(--ink-2); }
+.chips button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.chips .n { color: var(--muted); font-family: var(--f-num); margin-inline-start: 5px; font-weight: 400; }
 
-/* session rows */
-.rows { display: grid; }
-.row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 4px; border-top: 1px solid var(--line); cursor: pointer; border-radius: 8px; }
-.row:first-child { border-top: 0; }
-.row:hover { background: var(--surface-2); }
-.row .d { text-align: center; line-height: 1.1; grid-row: 1 / span 2; }
-.row .d b { display: block; font-family: var(--f-num); font-size: 1.3rem; font-weight: 500; }
-.row .d span { font-size: .75rem; color: var(--muted); }
-.row .nm { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
-.row .sub { color: var(--muted); font-size: .85rem; min-width: 0; overflow-wrap: anywhere; display: flex; gap: 4px 10px; flex-wrap: wrap; align-items: center; }
-.row .amt { text-align: left; font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 500; }
-.row .act { grid-column: 3; display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
-.qp { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 3px 8px; font-size: .82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; }
-.qp:hover { background: var(--surface-2); }
-.qp i { width: 8px; height: 8px; border-radius: 2px; }
-.readonly .qp, .readonly .write-only { display: none !important; }
+/* sessions table */
+.sess .tr { grid-template-columns: 84px minmax(0, 1fr) 84px 230px 236px; cursor: pointer; padding-inline: 8px; margin-inline: -8px; border-radius: 8px; }
+.sess .tr:not(.th):hover { background: var(--surface-2); }
+.sess .th { cursor: default; }
+.sess .dt { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.sess .dt small { display: block; color: var(--muted); font-family: var(--f-body); font-size: .82rem; }
+.sess .nm { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.sess .nm .sub { font-weight: 400; display: block; }
+.sess .stc { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; }
+.pay { display: flex; gap: 4px; justify-content: flex-end; }
+.qp { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 9px; font-size: .86rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; color: var(--ink-2); }
+.qp:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.qp .ico { width: 15px; height: 15px; }
+.edit-hint { color: var(--muted); font-size: .86rem; text-align: left; }
+@media (max-width: 820px) {
+  .sess .th { display: none; }
+  .sess .tr { grid-template-columns: 64px minmax(0, 1fr) auto; grid-template-areas: "dt nm amt" "dt stc stc" "pay pay pay"; row-gap: 6px; }
+  .sess .dt { grid-area: dt; align-self: start; }
+  .sess .nm { grid-area: nm; }
+  .sess .amtc { grid-area: amt; }
+  .sess .stc { grid-area: stc; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .sess .pay { grid-area: pay; justify-content: flex-start; }
+  .sess .edit-hint { display: none; }
+}
+.readonly .pay, .readonly .write-only { display: none !important; }
 
 /* patients */
-.plist { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-.pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 6px; cursor: pointer; text-align: right; }
-.pcard:hover { border-color: var(--accent); }
-.pcard h3 { font-size: 1.1rem; font-weight: 700; font-family: var(--f-body); overflow-wrap: anywhere; }
-.pcard .kv { display: flex; justify-content: space-between; gap: 8px; color: var(--ink-2); font-size: .9rem; }
-.pcard .kv b { font-family: var(--f-num); font-weight: 500; color: var(--ink); }
-.pcard .kv b.bad { color: var(--bad); }
-.pcard.archived { opacity: .6; }
+.pts .tr { grid-template-columns: minmax(0, 1fr) 90px 110px 110px; cursor: pointer; padding-inline: 8px; margin-inline: -8px; border-radius: 8px; }
+.pts .tr:not(.th):hover { background: var(--surface-2); }
+.pts .tr.archived { opacity: .55; }
+.pts .c { text-align: left; font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) {
+  .pts .tr { grid-template-columns: minmax(0, 1fr) auto; }
+  .pts .th { display: none; }
+  .pts .c.hide-sm { display: none; }
+}
 
-/* settings */
-.form { display: grid; gap: 12px; }
-.field { display: grid; gap: 4px; min-width: 0; }
+/* forms */
+.form { display: grid; gap: 14px; }
+.field { display: grid; gap: 5px; min-width: 0; }
 .field label, .field .lab { font-weight: 600; font-size: .9rem; color: var(--ink-2); }
-.field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 10px; width: 100%; min-width: 0; }
+.field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 11px; width: 100%; min-width: 0; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
 .field textarea { min-height: 64px; resize: vertical; }
 .fr { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
-.seg button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.seg button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; color: var(--ink-2); }
 .seg button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
-.seg button i { width: 10px; height: 10px; border-radius: 3px; }
-.note { color: var(--muted); font-size: .88rem; margin: 0; }
-.banner { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 14px; font-weight: 600; }
+.note { color: var(--muted); font-size: .9rem; margin: 0; }
+.banner { background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+.info { background: var(--accent-soft); color: var(--accent); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
 
 /* dialog */
-dialog { border: 0; border-radius: 16px; padding: 0; width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 32px); background: var(--surface); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.25); }
-dialog::backdrop { background: rgba(20, 12, 30, .45); }
-.dlg { display: grid; gap: 14px; padding: 18px; }
+dialog { border: 0; border-radius: 16px; padding: 0; width: min(580px, calc(100vw - 24px)); max-height: calc(100vh - 32px); background: var(--surface); color: var(--ink); box-shadow: 0 24px 64px rgba(0,0,0,.25); }
+dialog::backdrop { background: rgba(15, 20, 30, .45); }
+.dlg { display: grid; gap: 16px; padding: 20px; }
 .dlg-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.dlg-h h2 { font-family: var(--f-display); font-size: 1.3rem; }
-.dlg-h .x { border: 0; background: none; font-size: 1.4rem; line-height: 1; color: var(--muted); }
-.dlg-f { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
+.dlg-h h2 { font-family: var(--f-display); font-size: 1.35rem; }
+.dlg-h .x { border: 0; background: none; font-size: 1.5rem; line-height: 1; color: var(--muted); width: 36px; height: 36px; border-radius: 8px; }
+.dlg-h .x:hover { background: var(--surface-2); }
+.dlg-f { display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; }
 .dlg-f .end { display: flex; gap: 8px; margin-inline-start: auto; }
-.section { display: grid; gap: 10px; background: var(--surface-2); border-radius: 12px; padding: 12px; }
+.section { display: grid; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
 .section h3 { font-size: 1rem; }
 .paylist { display: grid; gap: 6px; }
-.payrow { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 8px; padding: 6px 10px; flex-wrap: wrap; }
-.payrow .grow { flex: 1; min-width: 0; color: var(--muted); font-size: .85rem; }
+.payrow { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border-radius: 8px; padding: 8px 10px; flex-wrap: wrap; }
+.payrow .grow { flex: 1; min-width: 0; color: var(--muted); font-size: .86rem; }
 .confirm { background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-weight: 600; }
+.mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; }
+.mini > div { padding: 12px 14px; display: grid; }
+.mini > div + div { border-inline-start: 1px solid var(--line); }
+.mini .lbl { color: var(--ink-2); font-size: .85rem; font-weight: 600; }
+.mini b { font-family: var(--f-num); font-weight: 500; font-size: 1.3rem; }
+.mini .bad b { color: var(--bad); }
+.mini .good b { color: var(--good); }
 
 /* toast */
-.toast { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; display: flex; gap: 14px; align-items: center; z-index: 10; box-shadow: var(--shadow); max-width: calc(100vw - 32px); }
+.toast { position: fixed; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 11px 18px; border-radius: 12px; display: flex; gap: 16px; align-items: center; z-index: 10; box-shadow: 0 8px 24px rgba(0,0,0,.2); max-width: calc(100vw - 32px); }
 .toast button { border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; }
-
-@media (max-width: 560px) {
-  .brand h1 { font-size: 1.4rem; }
-  .row { grid-template-columns: 44px minmax(0, 1fr) auto; }
-  .row .act { grid-column: 2 / span 2; justify-content: flex-start; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .tile, .panel, .pcard { transition: border-color .15s; }
-}
 </style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-credit" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="11" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 10v4M18 10v4"/></symbol>
+  <symbol id="i-transfer" viewBox="0 0 24 24"><path d="M3.5 9.5 12 4.5l8.5 5M5.5 10v7M10 10v7M14 10v7M18.5 10v7M3.5 19.5h17"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
 
 <div class="app" id="app" dir="rtl" lang="he">
   <header class="top">
@@ -219,18 +265,18 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
       <p id="today-line"></p>
     </div>
     <div class="month" role="group" aria-label="בחירת חודש">
-      <button type="button" id="m-prev" aria-label="החודש הקודם">›</button>
+      <button type="button" id="m-prev" aria-label="החודש הקודם"><svg class="ico"><use href="#i-prev"/></svg></button>
       <b id="m-label"></b>
-      <button type="button" id="m-next" aria-label="החודש הבא">‹</button>
+      <button type="button" id="m-next" aria-label="החודש הבא"><svg class="ico"><use href="#i-next"/></svg></button>
     </div>
-    <button type="button" class="btn primary write-only" id="add-session">+ פגישה חדשה</button>
+    <button type="button" class="btn primary write-only" id="add-session"><svg class="ico"><use href="#i-plus"/></svg>פגישה חדשה</button>
   </header>
 
-  <div id="banner" class="banner" hidden></div>
+  <div id="banner" class="info" hidden></div>
 
   <nav class="tabs" role="tablist">
-    <button type="button" role="tab" data-tab="dash" aria-selected="true">לוח בקרה</button>
-    <button type="button" role="tab" data-tab="sessions" aria-selected="false">פגישות החודש</button>
+    <button type="button" role="tab" data-tab="dash" aria-selected="true">סיכום</button>
+    <button type="button" role="tab" data-tab="sessions" aria-selected="false">פגישות</button>
     <button type="button" role="tab" data-tab="patients" aria-selected="false">מטופלות</button>
     <button type="button" role="tab" data-tab="settings" aria-selected="false">הגדרות וייצוא</button>
   </nav>
@@ -247,16 +293,14 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
 
   // ---------- constants & helpers ----------
   const METHODS = {
-    credit: { label: "אשראי", color: "var(--m-credit)" },
-    cash: { label: "מזומן", color: "var(--m-cash)" },
-    transfer: { label: "העברה בנקאית", color: "var(--m-transfer)", short: "העברה" },
+    credit: { label: "אשראי", icon: "i-credit" },
+    cash: { label: "מזומן", icon: "i-cash" },
+    transfer: { label: "העברה בנקאית", short: "העברה", icon: "i-transfer" },
   };
   const METHOD_KEYS = ["credit", "cash", "transfer"];
-  const STATUS = {
-    held: "התקיימה",
-    late: "בוטלה – בחיוב",
-    free: "בוטלה – ללא חיוב",
-  };
+  const STATUS = { held: "התקיימה", late: "בוטלה – בחיוב", free: "בוטלה – ללא חיוב" };
+  const icon = (id) => '<svg class="ico" aria-hidden="true"><use href="#' + id + '"/></svg>';
+  const mLabel = (k, short) => (METHODS[k] ? (short && METHODS[k].short) || METHODS[k].label : k);
   const nis = new Intl.NumberFormat("he-IL", { maximumFractionDigits: 0 });
   const money = (n) => nis.format(Math.round(n || 0)) + " ₪";
   const pad = (n) => String(n).padStart(2, "0");
@@ -265,9 +309,11 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
   const ymOf = (iso) => iso.slice(0, 7);
   const addMonths = (ym, k) => { const [y, m] = ym.split("-").map(Number); const d = new Date(y, m - 1 + k, 1); return d.getFullYear() + "-" + pad(d.getMonth() + 1); };
   const monthName = (ym, opts) => { const [y, m] = ym.split("-").map(Number); return new Intl.DateTimeFormat("he-IL", opts || { month: "long", year: "numeric" }).format(new Date(y, m - 1, 1)); };
-  const dayParts = (iso) => { const [y, m, d] = iso.split("-").map(Number); const dt = new Date(y, m - 1, d); return { day: d, wd: new Intl.DateTimeFormat("he-IL", { weekday: "short" }).format(dt) }; };
+  const weekday = (iso) => { const [y, m, d] = iso.split("-").map(Number); return new Intl.DateTimeFormat("he-IL", { weekday: "long" }).format(new Date(y, m - 1, d)); };
+  const shortDate = (iso) => { const [, m, d] = iso.split("-"); return Number(d) + "." + Number(m); };
   const fmtDate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return d + "/" + m + "/" + y; };
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const plural = (n, one, many) => (n === 1 ? one : n + " " + many);
   const $ = (sel, root) => (root || document).querySelector(sel);
   const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
@@ -285,14 +331,15 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
   const balOf = (s) => Math.max(0, charge(s) - paidOf(s));
   const isFuture = (s) => s.date > todayISO();
   const patientName = (id) => { const p = S.patients.get(id); return p ? p.name : "מטופלת שנמחקה"; };
-  const sortedSessions = () => Array.from(S.sessions.values()).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const byDateDesc = (a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+  const sortedSessions = () => Array.from(S.sessions.values()).sort(byDateDesc);
 
   function payState(s) {
     if (s.status === "free") return { cls: "none", label: "ללא חיוב" };
     const paid = paidOf(s), c = charge(s);
     if (c > 0 && paid >= c) return { cls: "paid", label: "שולם" };
     if (paid > 0) return { cls: "part", label: "שולם חלקית" };
-    if (isFuture(s)) return { cls: "future", label: "עתידית" };
+    if (isFuture(s)) return { cls: "future", label: "טרם התקיימה" };
     return { cls: "due", label: "לא שולם" };
   }
 
@@ -336,19 +383,19 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
     const before = (s.payments || []).map((p) => Object.assign({}, p));
     const payments = before.concat([{ amount, method, date: todayISO(), receipt: "" }]);
     updDoc("sessions", sid, { payments }).then(() => {
-      toast("נרשם תשלום של " + money(amount) + " ב" + METHODS[method].label + " – " + patientName(s.patientId), () => updDoc("sessions", sid, { payments: before }));
+      toast(patientName(s.patientId) + ": נרשם תשלום " + money(amount) + " ב" + mLabel(method), () => updDoc("sessions", sid, { payments: before }));
     }, () => {});
   }
 
   // ---------- render ----------
   function render() {
-    $("#clinic-name").textContent = S.settings.clinicName ? S.settings.clinicName : "יומן גבייה";
+    $("#clinic-name").textContent = S.settings.clinicName || "יומן גבייה";
     $("#today-line").textContent = "היום " + new Intl.DateTimeFormat("he-IL", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
     $("#m-label").textContent = monthName(S.month);
     $$(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === S.tab)));
     const v = $("#view");
-    if (S.noDb) { v.innerHTML = '<div class="empty"><b>הנתונים לא זמינים כאן</b><span>פתחי את הדף מתוך claude.ai כשאת מחוברת לחשבון, כדי לראות ולשמור את נתוני הגבייה.</span></div>'; return; }
-    if (!S.ready) { v.innerHTML = '<div class="empty">טוען את הנתונים…</div>'; return; }
+    if (S.noDb) { v.innerHTML = '<div class="card"><div class="empty"><b>הנתונים לא זמינים כאן</b><span>פתחי את הדף מתוך claude.ai כשאת מחוברת לחשבון, כדי לראות ולשמור את נתוני הגבייה.</span></div></div>'; return; }
+    if (!S.ready) { v.innerHTML = '<div class="card"><div class="empty">טוען את הנתונים…</div></div>'; return; }
     if (S.tab === "dash") v.innerHTML = viewDash();
     else if (S.tab === "sessions") v.innerHTML = viewSessions();
     else if (S.tab === "patients") v.innerHTML = viewPatients();
@@ -386,100 +433,80 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
     const billedPaid = held.reduce((a, s) => a + Math.min(charge(s), paidOf(s)), 0);
     const debts = debtsByPatient();
     const debtTotal = debts.reduce((a, d) => a + d.total, 0);
-    const pct = billed > 0 ? Math.round((billedPaid / billed) * 100) : null;
+    const pct = billed > 0 ? Math.round((billedPaid / billed) * 100) : 0;
 
-    let h = '<div style="display:grid;gap:16px">';
-    h += '<section class="tiles">';
-    h += tile("נגבה בחודש", money(ms.collected), "לפי תאריך התשלום", "good");
-    h += tile("ממתין לגבייה", money(debtTotal), debts.length ? debts.length + " מטופלות עם יתרה" : "אין חובות פתוחים 🎉", debtTotal > 0 ? "bad" : "");
-    h += tile("פגישות בחודש", String(held.length), cancelled ? cancelled + " ביטולים" : "ללא ביטולים", "");
-    h += tile("חיוב החודש", money(billed), pct == null ? "אין חיובים עדיין" : pct + "% מזה כבר שולם", "");
-    h += "</section>";
+    let h = '<div class="stack">';
 
-    h += '<div class="grid2">';
-    // debts
-    h += '<section class="panel"><div class="panel-h"><h2>חובות פתוחים</h2><span class="hint">מכל החודשים, עד היום</span></div>';
-    if (!debts.length) h += '<div class="empty">כל המטופלות שילמו. אין יתרות פתוחות.</div>';
-    else {
-      h += '<div>';
-      debts.forEach((d) => {
-        h += '<div class="debt"><span class="who" data-open-patient="' + esc(d.pid) + '">' + esc(patientName(d.pid)) + '</span>' +
-          '<span class="amt">' + money(d.total) + '</span>' +
-          '<button type="button" class="btn small write-only" data-pay-patient="' + esc(d.pid) + '">רישום תשלום</button>' +
-          '<span class="meta">' + d.count + (d.count === 1 ? " פגישה" : " פגישות") + " · הוותיקה מ-" + fmtDate(d.oldest) + "</span></div>";
-      });
-      h += "</div>";
-    }
-    h += "</section>";
-
-    // method breakdown + chart
-    h += '<div style="display:grid;gap:16px;min-width:0">';
-    h += '<section class="panel"><div class="panel-h"><h2>אמצעי תשלום</h2><span class="hint">' + esc(monthName(S.month)) + "</span></div>";
-    if (ms.collected <= 0) h += '<div class="empty">עדיין לא נרשמו תשלומים בחודש הזה.</div>';
-    else {
-      h += '<div class="stackbar" role="img" aria-label="חלוקת התשלומים לפי אמצעי תשלום">';
-      METHOD_KEYS.forEach((k) => { if (ms.by[k] > 0) h += '<span style="width:' + (ms.by[k] / ms.collected * 100) + "%;background:" + METHODS[k].color + '"></span>'; });
-      h += '</div><div class="legend">';
-      METHOD_KEYS.forEach((k) => {
-        h += '<div><i style="background:' + METHODS[k].color + '"></i><span>' + METHODS[k].label + '</span><b class="num">' + money(ms.by[k]) + '</b><span class="pct num">' + Math.round(ms.by[k] / ms.collected * 100) + "%</span></div>";
-      });
-      h += "</div>";
-    }
-    h += "</section>";
-    h += '<section class="panel"><div class="panel-h"><h2>הכנסות לפי חודש</h2><span class="hint">חצי השנה האחרונה</span></div><div class="chart" id="chart">' + chartSVG() + '<div class="tip" id="tip" hidden></div></div>' +
-      '<div class="legend" style="grid-template-columns:repeat(3,auto);justify-content:start;column-gap:16px">' +
-      METHOD_KEYS.map((k) => '<span class="mchip"><i style="background:' + METHODS[k].color + '"></i>' + (METHODS[k].short || METHODS[k].label) + "</span>").join("") +
+    // hero
+    h += '<section class="card hero"><div class="hero-main">' +
+      '<span class="eyebrow">התקבל ב' + esc(monthName(S.month, { month: "long" })) + "</span>" +
+      '<span class="big">' + money(ms.collected) + "</span>";
+    if (billed > 0) {
+      h += '<div class="progress" role="img" aria-label="' + pct + '% מפגישות החודש שולמו"><span style="width:' + pct + '%"></span></div>' +
+        '<div class="prog-txt"><span>מפגישות החודש שולמו <b>' + money(billedPaid) + "</b> מתוך <b>" + money(billed) + "</b></span><span><b>" + pct + "%</b></span></div>";
+    } else h += '<span class="note">עדיין אין פגישות בחיוב בחודש הזה.</span>';
+    h += '</div><div class="hero-side">' +
+      '<div class="fig ' + (debtTotal > 0 ? "bad" : "good") + '"><span class="lbl">ממתין לגבייה</span><b>' + money(debtTotal) + '</b><span class="s">' + (debts.length ? "מ-" + plural(debts.length, "מטופלת אחת", "מטופלות") + ", מכל החודשים" : "כל החובות נסגרו") + "</span></div>" +
+      '<div class="fig"><span class="lbl">פגישות החודש</span><b>' + held.length + '</b><span class="s">' + (cancelled ? plural(cancelled, "ביטול אחד", "ביטולים") : "ללא ביטולים") + "</span></div>" +
       "</div></section>";
-    h += "</div></div></div>";
-    return h;
-  }
 
-  function tile(lbl, val, sub, cls) {
-    return '<div class="tile ' + cls + '"><span class="lbl">' + lbl + '</span><span class="val">' + val + '</span><span class="sub">' + esc(sub) + "</span></div>";
+    h += '<div class="cols">';
+    // debts
+    h += '<section class="card"><div class="card-h"><h2>מי עוד לא שילמה</h2><span class="hint">יתרות פתוחות עד היום</span></div><div class="card-b">';
+    if (!debts.length) h += '<div class="empty"><b style="color:var(--good)">אין חובות פתוחים</b><span>כל הפגישות שהתקיימו שולמו.</span></div>';
+    else {
+      h += '<div class="tbl debts">';
+      debts.forEach((d) => {
+        h += '<div class="tr"><div><button type="button" class="link" data-open-patient="' + esc(d.pid) + '">' + esc(patientName(d.pid)) + '</button><div class="sub">' + plural(d.count, "פגישה אחת", "פגישות") + " · הראשונה מ-" + shortDate(d.oldest) + "</div></div>" +
+          '<span class="amt bad">' + money(d.total) + "</span>" +
+          '<button type="button" class="btn small write-only" data-pay-patient="' + esc(d.pid) + '">רישום תשלום</button></div>';
+      });
+      h += '</div><div class="debt-total"><span>סה״כ</span><span class="amt bad">' + money(debtTotal) + "</span></div>";
+    }
+    h += "</div></section>";
+
+    // methods
+    h += '<section class="card"><div class="card-h"><h2>איך שילמו החודש</h2></div><div class="card-b">';
+    if (ms.collected <= 0) h += '<div class="empty">עדיין לא התקבלו תשלומים החודש.</div>';
+    else {
+      METHOD_KEYS.forEach((k) => {
+        const p = Math.round((ms.by[k] / ms.collected) * 100);
+        h += '<div class="mrow"><span class="micon">' + icon(METHODS[k].icon) + '</span><span class="mt">' + METHODS[k].label + '</span><span class="amt">' + money(ms.by[k]) + '</span><span class="pct">' + p + '%</span><div class="mbar"><span style="width:' + p + '%"></span></div></div>';
+      });
+    }
+    h += "</div></section></div>";
+
+    // chart
+    h += '<section class="card"><div class="card-h"><h2>הכנסות בחצי השנה האחרונה</h2><span class="hint">לפי תאריך התשלום</span></div><div class="card-b"><div class="chart" id="chart">' + chartSVG() + '<div class="tip" id="tip" hidden></div></div></div></section>';
+    return h + "</div>";
   }
 
   let chartData = [];
   function chartSVG() {
     const months = []; for (let i = 5; i >= 0; i--) months.push(addMonths(S.month, -i));
     chartData = months.map((ym) => Object.assign({ ym }, monthStats(ym)));
-    const W = 600, H = 230, top = 26, bottom = 30, left = 8, right = 52;
+    const W = 640, H = 210, top = 28, bottom = 28;
     const max = Math.max(1, ...chartData.map((d) => d.collected));
-    const step = niceStep(max / 3); const yMax = Math.ceil(max / step) * step;
-    const ph = H - top - bottom, pw = W - left - right;
-    const slot = pw / chartData.length, bw = Math.min(46, slot * 0.5);
-    const y = (v) => top + ph - (v / yMax) * ph;
+    const ph = H - top - bottom;
+    const slot = W / chartData.length, bw = Math.min(56, slot * 0.46);
+    const y = (v) => top + ph - (v / max) * ph;
     let s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="הכנסות בששת החודשים האחרונים">';
-    for (let v = 0; v <= yMax + 0.001; v += step) {
-      s += '<line class="grid" x1="' + left + '" x2="' + (W - right) + '" y1="' + y(v) + '" y2="' + y(v) + '"/>';
-      s += '<text x="' + (W - right + 8) + '" y="' + (y(v) + 4) + '" text-anchor="start">' + (v >= 1000 ? nis.format(v / 1000) + "K" : nis.format(v)) + "</text>";
-    }
-    // RTL: newest month on the left side -> draw oldest at right
+    // RTL: oldest month on the right, selected month on the left
     chartData.forEach((d, i) => {
-      const cx = left + pw - slot * (i + 0.5);
-      s += '<rect class="hit" data-i="' + i + '" x="' + (cx - slot / 2 + 2) + '" y="' + top + '" width="' + (slot - 4) + '" height="' + ph + '" rx="6"/>';
-      let acc = 0;
-      const segs = METHOD_KEYS.filter((k) => d.by[k] > 0);
-      segs.forEach((k, j) => {
-        const v = d.by[k]; const y1 = y(acc + v), y0 = y(acc);
-        const gap = j > 0 ? 2 : 0; const hgt = Math.max(0, y0 - y1 - gap);
-        const isTop = j === segs.length - 1;
-        if (isTop && hgt > 4) {
-          const r = 4, x0 = cx - bw / 2, x1 = cx + bw / 2, yb = y0 - gap, yt = y1;
-          s += '<path pointer-events="none" fill="' + METHODS[k].color + '" d="M' + x0 + " " + yb + " V" + (yt + r) + " Q" + x0 + " " + yt + " " + (x0 + r) + " " + yt + " H" + (x1 - r) + " Q" + x1 + " " + yt + " " + x1 + " " + (yt + r) + " V" + yb + ' Z"/>';
-        } else {
-          s += '<rect pointer-events="none" fill="' + METHODS[k].color + '" x="' + (cx - bw / 2) + '" y="' + y1 + '" width="' + bw + '" height="' + hgt + '"/>';
-        }
-        acc += v;
-      });
-      if (d.collected > 0) s += '<text class="tot" pointer-events="none" x="' + cx + '" y="' + (y(d.collected) - 7) + '" text-anchor="middle">' + money(d.collected) + "</text>";
-      s += '<text pointer-events="none" x="' + cx + '" y="' + (H - 9) + '" text-anchor="middle"' + (d.ym === S.month ? ' class="tot"' : "") + ">" + esc(monthName(d.ym, { month: "short" })) + "</text>";
+      const cx = W - slot * (i + 0.5);
+      const cur = d.ym === S.month;
+      s += '<rect class="hit" data-i="' + i + '" x="' + (cx - slot / 2 + 3) + '" y="0" width="' + (slot - 6) + '" height="' + (H - bottom + 4) + '" rx="8"/>';
+      if (d.collected > 0) {
+        const yt = y(d.collected), yb = top + ph, x0 = cx - bw / 2, x1 = cx + bw / 2, r = Math.min(4, (yb - yt) / 2);
+        s += '<path pointer-events="none" class="b' + (cur ? " cur" : "") + '" d="M' + x0 + " " + yb + " V" + (yt + r) + " Q" + x0 + " " + yt + " " + (x0 + r) + " " + yt + " H" + (x1 - r) + " Q" + x1 + " " + yt + " " + x1 + " " + (yt + r) + " V" + yb + ' Z"/>';
+        s += '<text pointer-events="none" class="v' + (cur ? " cur" : "") + '" x="' + cx + '" y="' + (yt - 8) + '" text-anchor="middle">' + money(d.collected) + "</text>";
+      } else {
+        s += '<text pointer-events="none" x="' + cx + '" y="' + (top + ph - 8) + '" text-anchor="middle">—</text>';
+      }
+      s += '<text pointer-events="none" x="' + cx + '" y="' + (H - 6) + '" text-anchor="middle"' + (cur ? ' class="cur"' : "") + ">" + esc(monthName(d.ym, { month: "long" })) + "</text>";
     });
-    s += '<line class="grid" x1="' + left + '" x2="' + (W - right) + '" y1="' + y(0) + '" y2="' + y(0) + '" style="stroke:var(--muted)"/>';
+    s += '<line class="base" x1="0" x2="' + W + '" y1="' + (top + ph) + '" y2="' + (top + ph) + '"/>';
     return s + "</svg>";
-  }
-  function niceStep(raw) {
-    const p = Math.pow(10, Math.floor(Math.log10(Math.max(raw, 1))));
-    const n = raw / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
   }
   function wireChart() {
     const box = $("#chart"); if (!box) return;
@@ -489,11 +516,12 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
       el.classList.add("on");
       const d = chartData[Number(el.dataset.i)];
       tip.innerHTML = "<b>" + esc(monthName(d.ym)) + "</b>" + METHOD_KEYS.map((k) => '<div class="r"><span>' + METHODS[k].label + '</span><span class="num">' + money(d.by[k]) + "</span></div>").join("") + '<div class="r"><b>סה״כ</b><b class="num">' + money(d.collected) + "</b></div>";
+      tip.hidden = false;
       const br = box.getBoundingClientRect(), er = el.getBoundingClientRect();
       const cx = er.left + er.width / 2 - br.left;
-      const leftPos = Math.min(Math.max(cx - 80, 0), br.width - 170);
-      tip.style.left = leftPos + "px"; tip.style.top = (er.top - br.top + 30) + "px"; tip.style.transform = "translateY(-100%)";
-      tip.hidden = false;
+      const w = tip.offsetWidth;
+      tip.style.left = Math.min(Math.max(cx - w / 2, 0), br.width - w) + "px";
+      tip.style.top = (-tip.offsetHeight - 6) + "px";
     };
     $$(".hit", box).forEach((el) => {
       el.addEventListener("pointerenter", () => show(el));
@@ -502,39 +530,46 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
     box.addEventListener("pointerleave", () => { tip.hidden = true; $$(".hit.on", box).forEach((x) => x.classList.remove("on")); });
   }
 
+  function viaHTML(s) {
+    const methods = Array.from(new Set((s.payments || []).map((p) => p.method)));
+    return methods.map((m) => '<span class="via">' + (METHODS[m] ? icon(METHODS[m].icon) : "") + esc(mLabel(m, true)) + "</span>").join("");
+  }
+
   function sessionRow(s, opts) {
-    const st = payState(s), dp = dayParts(s.date), bal = balOf(s), paid = paidOf(s);
-    const methods = Array.from(new Set((s.payments || []).map((p) => p.method))).filter((m) => METHODS[m]);
-    let sub = '<span class="pill ' + st.cls + '">' + st.label + "</span>";
-    if (s.status !== "held") sub += "<span>" + STATUS[s.status] + "</span>";
-    methods.forEach((m) => { sub += '<span class="mchip"><i style="background:' + METHODS[m].color + '"></i>' + (METHODS[m].short || METHODS[m].label) + "</span>"; });
+    const noName = !!(opts && opts.noName);
+    const st = payState(s), bal = balOf(s), paid = paidOf(s);
     const receipts = (s.payments || []).map((p) => p.receipt).filter(Boolean);
-    if (receipts.length) sub += "<span>קבלה " + esc(receipts.join(", ")) + "</span>";
-    if (s.note) sub += "<span>📝 " + esc(s.note) + "</span>";
-    let amt = '<span class="amt">' + money(charge(s));
-    if (paid > 0 && bal > 0) amt += '<br><small style="color:var(--bad)">נותר ' + money(bal) + "</small>";
-    amt += "</span>";
-    let act = "";
-    if (bal > 0) act = '<div class="act">' + METHOD_KEYS.map((k) => '<button type="button" class="qp" data-qp="' + esc(s.id) + '" data-m="' + k + '" title="סימון כשולם ב' + METHODS[k].label + '"><i style="background:' + METHODS[k].color + '"></i>' + (METHODS[k].short || METHODS[k].label) + "</button>").join("") + "</div>";
-    const title = opts && opts.noName ? STATUS[s.status] : esc(patientName(s.patientId));
-    return '<div class="row" data-edit="' + esc(s.id) + '"><div class="d"><b>' + dp.day + "</b><span>" + esc(dp.wd) + (opts && opts.noName ? " " + esc(monthName(ymOf(s.date), { month: "short" })) : "") + '</span></div><div class="nm">' + title + "</div>" + amt + '<div class="sub">' + sub + "</div>" + act + "</div>";
+    const subBits = [];
+    if (!noName && s.status !== "held") subBits.push(STATUS[s.status]);
+    if (s.note) subBits.push(esc(s.note));
+    const title = noName ? STATUS[s.status] : esc(patientName(s.patientId));
+    let h = '<div class="tr" data-edit="' + esc(s.id) + '">' +
+      '<div class="dt">' + shortDate(s.date) + "<small>" + esc(weekday(s.date)) + "</small></div>" +
+      '<div class="nm">' + title + (subBits.length ? '<span class="sub">' + subBits.join(" · ") + "</span>" : "") + "</div>" +
+      '<div class="amtc"><div class="amt">' + money(charge(s)) + "</div>" + (paid > 0 && bal > 0 ? '<div class="sub amt" style="color:var(--bad)">נותרו ' + money(bal) + "</div>" : "") + "</div>" +
+      '<div class="stc"><span class="st ' + st.cls + '">' + st.label + "</span>" + viaHTML(s) + (receipts.length ? '<span class="sub">קבלה ' + esc(receipts.join(", ")) + "</span>" : "") + "</div>";
+    if (bal > 0) h += '<div class="pay">' + METHOD_KEYS.map((k) => '<button type="button" class="qp" data-qp="' + esc(s.id) + '" data-m="' + k + '" title="סימון כשולם ב' + METHODS[k].label + '">' + icon(METHODS[k].icon) + mLabel(k, true) + "</button>").join("") + "</div>";
+    else h += '<div class="edit-hint">עריכה</div>';
+    return h + "</div>";
   }
 
   function viewSessions() {
     let list = Array.from(S.sessions.values()).filter((s) => ymOf(s.date) === S.month);
-    const counts = { all: list.length, due: list.filter((s) => balOf(s) > 0).length, paid: list.filter((s) => balOf(s) <= 0).length };
-    if (S.filter === "due") list = list.filter((s) => balOf(s) > 0);
+    const due = list.filter((s) => balOf(s) > 0);
+    const counts = { all: list.length, due: due.length, paid: list.length - due.length };
+    if (S.filter === "due") list = due;
     if (S.filter === "paid") list = list.filter((s) => balOf(s) <= 0);
-    list.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
-    let h = '<section class="panel"><div class="filters">' +
-      fbtn("all", "הכל", counts.all) + fbtn("due", "לא שולם", counts.due) + fbtn("paid", "שולם / ללא חיוב", counts.paid) +
-      '<span class="spacer"></span><span class="note write-only">לחיצה על אמצעי תשלום מסמנת את הפגישה כשולמה במלואה</span></div>';
+    list.sort(byDateDesc);
+    let h = '<section class="card"><div class="card-h"><h2>פגישות ' + esc(monthName(S.month)) + '</h2><span class="hint write-only">לחיצה על אשראי / מזומן / העברה מסמנת שהפגישה שולמה</span></div><div class="card-b" style="display:grid;gap:12px">' +
+      '<div class="toolbar"><div class="chips">' + fbtn("all", "הכל", counts.all) + fbtn("due", "ממתינות לתשלום", counts.due) + fbtn("paid", "שולמו", counts.paid) + "</div></div>";
     if (!list.length) {
-      h += '<div class="empty"><span>' + (counts.all ? "אין פגישות שמתאימות לסינון." : "עדיין אין פגישות ב" + esc(monthName(S.month)) + ".") + '</span><button type="button" class="btn primary write-only" data-new-session="">+ הוספת פגישה</button></div>';
-    } else h += '<div class="rows">' + list.map((s) => sessionRow(s)).join("") + "</div>";
-    return h + "</section>";
+      h += '<div class="empty"><span>' + (counts.all ? "אין פגישות שמתאימות לסינון." : "עדיין אין פגישות ב" + esc(monthName(S.month)) + ".") + '</span><button type="button" class="btn primary write-only" data-new-session="">' + icon("i-plus") + "הוספת פגישה</button></div>";
+    } else {
+      h += '<div class="tbl sess"><div class="tr th"><span>תאריך</span><span>מטופלת</span><span style="text-align:left">סכום</span><span>מצב</span><span style="text-align:left" class="write-only">סימון תשלום</span></div>' + list.map((s) => sessionRow(s)).join("") + "</div>";
+    }
+    return h + "</div></section>";
   }
-  function fbtn(k, label, n) { return '<button type="button" data-filter="' + k + '" aria-pressed="' + (S.filter === k) + '">' + label + ' <span class="num">' + n + "</span></button>"; }
+  function fbtn(k, label, n) { return '<button type="button" data-filter="' + k + '" aria-pressed="' + (S.filter === k) + '">' + label + '<span class="n">' + n + "</span></button>"; }
 
   function patientSummary(pid) {
     let total = 0, count = 0, last = "";
@@ -544,57 +579,59 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
 
   function viewPatients() {
     const all = Array.from(S.patients.values()).sort((a, b) => (a.active === b.active ? a.name.localeCompare(b.name, "he") : a.active ? -1 : 1));
-    let h = '<section style="display:grid;gap:12px"><div class="filters"><span class="note">' + all.filter((p) => p.active).length + ' מטופלות פעילות</span><span class="spacer"></span><button type="button" class="btn primary write-only" id="add-patient">+ מטופלת חדשה</button></div>';
-    if (!all.length) h += '<div class="empty"><span>עדיין לא נוספו מטופלות. הוסיפי את הראשונה כדי להתחיל לרשום פגישות.</span></div>';
+    const active = all.filter((p) => p.active).length;
+    let h = '<section class="card"><div class="card-h"><h2>מטופלות</h2><span class="hint">' + plural(active, "מטופלת פעילה אחת", "מטופלות פעילות") + '</span></div><div class="card-b" style="display:grid;gap:12px">' +
+      '<div class="toolbar"><span class="grow"></span><button type="button" class="btn write-only" id="add-patient">' + icon("i-plus") + "מטופלת חדשה</button></div>";
+    if (!all.length) h += '<div class="empty">עדיין לא נוספו מטופלות. הוסיפי את הראשונה כדי להתחיל לרשום פגישות.</div>';
     else {
-      h += '<div class="plist">';
+      h += '<div class="tbl pts"><div class="tr th"><span>שם</span><span class="c">פגישות</span><span class="c">פגישה אחרונה</span><span class="c">יתרה לתשלום</span></div>';
       all.forEach((p) => {
         const sm = patientSummary(p.id);
-        h += '<button type="button" class="pcard' + (p.active ? "" : " archived") + '" data-open-patient="' + esc(p.id) + '"><h3>' + esc(p.name) + (p.active ? "" : " · בארכיון") + "</h3>" +
-          '<div class="kv"><span>יתרה לתשלום</span><b class="num' + (sm.total > 0 ? " bad" : "") + '">' + money(sm.total) + "</b></div>" +
-          '<div class="kv"><span>פגישות</span><b class="num">' + sm.count + "</b></div>" +
-          '<div class="kv"><span>פגישה אחרונה</span><b class="num">' + (sm.last ? fmtDate(sm.last) : "—") + "</b></div></button>";
+        h += '<div class="tr' + (p.active ? "" : " archived") + '" data-open-patient="' + esc(p.id) + '"><span><b>' + esc(p.name) + "</b>" + (p.active ? "" : ' <span class="sub">· בארכיון</span>') + "</span>" +
+          '<span class="c hide-sm">' + sm.count + "</span>" +
+          '<span class="c hide-sm">' + (sm.last ? fmtDate(sm.last) : "—") + "</span>" +
+          '<span class="c amt' + (sm.total > 0 ? " bad" : "") + '">' + (sm.total > 0 ? money(sm.total) : '<span class="st paid" style="font-family:var(--f-body)">אין חוב</span>') + "</span></div>";
       });
       h += "</div>";
     }
-    return h + "</section>";
+    return h + "</div></section>";
   }
 
   function viewSettings() {
     const ex = Array.from(S.patients.values()).filter((p) => p.example).length + Array.from(S.sessions.values()).filter((s) => s.example).length;
-    let h = '<div class="grid2">';
-    h += '<section class="panel"><div class="panel-h"><h2>הגדרות הקליניקה</h2></div><div class="form">' +
+    let h = '<div class="stack"><div class="cols">';
+    h += '<section class="card"><div class="card-h"><h2>הגדרות הקליניקה</h2></div><div class="card-b form">' +
       '<div class="field"><label for="set-name">שם הקליניקה (מופיע בראש הדף)</label><input id="set-name" value="' + esc(S.settings.clinicName) + '" placeholder="לדוגמה: הקליניקה של רחל"></div>' +
       '<div class="field"><label for="set-price">מחיר ברירת מחדל לפגישה (₪)</label><input id="set-price" type="number" min="0" step="10" inputmode="numeric" value="' + esc(S.settings.defaultPrice) + '"></div>' +
       '<div><button type="button" class="btn primary write-only" id="save-settings">שמירת הגדרות</button></div>' +
-      '<p class="note">שינוי המחיר חל על פגישות חדשות בלבד. פגישות שכבר נרשמו שומרות על המחיר שלהן.</p></div></section>';
+      '<p class="note">שינוי המחיר חל על פגישות חדשות בלבד.</p></div></section>';
 
-    h += '<section class="panel"><div class="panel-h"><h2>ייצוא לרואה החשבון</h2></div><div class="form">';
+    h += '<section class="card"><div class="card-h"><h2>ייצוא לרואה החשבון</h2></div><div class="card-b form">';
     if (!S.downloads) h += '<p class="note">הורדת קבצים לא זמינה בתצוגה הזו. פתחי את הדף ב-claude.ai כדי לייצא.</p>';
     else {
       const y = S.month.slice(0, 4);
       h += '<div class="field"><label for="exp-range">טווח</label><select id="exp-range"><option value="month">' + esc(monthName(S.month)) + '</option><option value="year">כל שנת ' + y + '</option><option value="all">כל הנתונים</option></select></div>' +
-        '<div class="filters"><button type="button" class="btn" id="exp-payments">⬇ תשלומים (CSV)</button><button type="button" class="btn" id="exp-sessions">⬇ פגישות ויתרות (CSV)</button></div>' +
-        '<p class="note">הקובץ נפתח ישירות באקסל, כולל עברית. „תשלומים” מסודר לפי תאריך התשלום, עם אמצעי התשלום ומספר הקבלה.</p>';
+        '<div class="toolbar"><button type="button" class="btn" id="exp-payments">ייצוא תשלומים</button><button type="button" class="btn" id="exp-sessions">ייצוא פגישות ויתרות</button></div>' +
+        '<p class="note">קובץ CSV שנפתח באקסל, כולל עברית. „תשלומים” מסודר לפי תאריך התשלום, עם אמצעי התשלום ומספר הקבלה.</p>';
     }
     h += "</div></section></div>";
 
-    h += '<section class="panel" style="margin-top:16px"><div class="panel-h"><h2>פרטיות</h2></div><p class="note">הנתונים נשמרים בענן, בדף הפרטי שלך ב-claude.ai, ומסתנכרנים בין הטלפון למחשב. רק בעלת הדף ומי שהוזמנה כעורכת יכולות לראות ולשנות אותם.</p>';
-    if (ex > 0) h += '<div class="filters write-only"><span class="note">יש כאן ' + ex + ' רשומות דוגמה (מסומנות „דוגמה”).</span><button type="button" class="btn danger" id="clear-examples">מחיקת נתוני הדוגמה</button></div>';
-    h += "</section>";
+    h += '<section class="card"><div class="card-h"><h2>פרטיות</h2></div><div class="card-b form"><p class="note">הנתונים נשמרים בענן, בדף הפרטי שלך ב-claude.ai, ומסתנכרנים בין הטלפון למחשב. רק בעלת הדף ומי שהוזמנה כעורכת יכולות לראות ולשנות אותם.</p>';
+    if (ex > 0) h += '<div class="toolbar write-only"><span class="note grow">יש כאן ' + ex + ' רשומות דוגמה (מסומנות „דוגמה”).</span><button type="button" class="btn danger" id="clear-examples">מחיקת נתוני הדוגמה</button></div>';
+    h += "</div></section></div>";
     return h;
   }
 
   // ---------- dialogs ----------
   const dlg = $("#dlg"), body = $("#dlg-body");
-  function openDlg(html, wire) { body.innerHTML = html; if (!dlg.open) dlg.showModal(); wire && wire(); }
+  function openDlg(html, wire) { body.innerHTML = html; if (!dlg.open) dlg.showModal(); body.scrollTop = 0; wire && wire(); }
   function closeDlg() { if (dlg.open) dlg.close(); }
   dlg.addEventListener("click", (e) => { if (e.target === dlg) closeDlg(); });
   const dlgHead = (t) => '<div class="dlg-h"><h2>' + t + '</h2><button type="button" class="x" data-close aria-label="סגירה">×</button></div>';
   body.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeDlg(); });
 
   function segHTML(id, items, val) {
-    return '<div class="seg" id="' + id + '">' + items.map((it) => '<button type="button" data-v="' + it.v + '" aria-pressed="' + (it.v === val) + '">' + (it.c ? '<i style="background:' + it.c + '"></i>' : "") + it.l + "</button>").join("") + "</div>";
+    return '<div class="seg" id="' + id + '">' + items.map((it) => '<button type="button" data-v="' + it.v + '" aria-pressed="' + (it.v === val) + '">' + (it.i ? icon(it.i) : "") + it.l + "</button>").join("") + "</div>";
   }
   function wireSeg(id, onChange) {
     const el = $("#" + id);
@@ -605,7 +642,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
     });
   }
   const segVal = (id) => { const b = $("#" + id + ' button[aria-pressed="true"]'); return b ? b.dataset.v : null; };
-  const methodItems = (withNone) => (withNone ? [{ v: "none", l: "טרם שולם" }] : []).concat(METHOD_KEYS.map((k) => ({ v: k, l: METHODS[k].label, c: METHODS[k].color })));
+  const methodItems = (withNone) => (withNone ? [{ v: "none", l: "טרם שולם" }] : []).concat(METHOD_KEYS.map((k) => ({ v: k, l: METHODS[k].label, i: METHODS[k].icon })));
 
   function patientOptions(selected) {
     const ps = Array.from(S.patients.values()).filter((p) => p.active || p.id === selected).sort((a, b) => a.name.localeCompare(b.name, "he"));
@@ -615,7 +652,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
   function openSession(sid, presetPatient) {
     const existing = sid ? S.sessions.get(sid) : null;
     const s = existing ? plain(existing) : { patientId: presetPatient || "", date: S.month === ymOf(todayISO()) ? todayISO() : S.month + "-01", price: Number(S.settings.defaultPrice) || 400, status: "held", note: "", payments: [] };
-    let payments = (s.payments || []).slice();
+    const payments = (s.payments || []).slice();
     const ro = !S.canWrite;
     const html = dlgHead(existing ? "עריכת פגישה" : "פגישה חדשה") +
       '<div class="form">' +
@@ -625,7 +662,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
       '<div class="field"><label for="f-price">מחיר (₪)</label><input id="f-price" type="number" min="0" step="10" inputmode="numeric" value="' + esc(s.price) + '"></div></div>' +
       '<div class="field"><span class="lab">סטטוס</span>' + segHTML("f-status", [{ v: "held", l: STATUS.held }, { v: "late", l: STATUS.late }, { v: "free", l: STATUS.free }], s.status) + "</div>" +
       '<div class="section"><h3>תשלום</h3><div class="paylist" id="f-paylist"></div>' +
-      '<div id="f-newpay"><div class="field"><span class="lab" id="f-newpay-lab">איך שולם?</span>' + segHTML("f-method", methodItems(true), "none") + "</div>" +
+      '<div id="f-newpay" class="form"><div class="field"><span class="lab" id="f-newpay-lab">איך שולם?</span>' + segHTML("f-method", methodItems(true), "none") + "</div>" +
       '<div class="fr" id="f-paydetails" hidden><div class="field"><label for="f-amount">סכום (₪)</label><input id="f-amount" type="number" min="0" step="10" inputmode="numeric"></div>' +
       '<div class="field"><label for="f-paydate">תאריך תשלום</label><input id="f-paydate" type="date" value="' + todayISO() + '"></div>' +
       '<div class="field"><label for="f-receipt">מספר קבלה</label><input id="f-receipt" placeholder="לא חובה"></div></div></div></div>' +
@@ -639,7 +676,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
       const curCharge = () => (segVal("f-status") === "free" ? 0 : Number($("#f-price").value) || 0);
       const paidSoFar = () => payments.reduce((a, p) => a + (Number(p.amount) || 0), 0);
       const drawPays = () => {
-        $("#f-paylist").innerHTML = payments.map((p, i) => '<div class="payrow"><span class="mchip"><i style="background:' + (METHODS[p.method] || METHODS.cash).color + '"></i>' + esc((METHODS[p.method] || { label: p.method }).label) + '</span><b class="num">' + money(p.amount) + '</b><span class="grow">' + fmtDate(p.date) + (p.receipt ? " · קבלה " + esc(p.receipt) : "") + "</span>" + (ro ? "" : '<button type="button" class="btn small danger" data-rmpay="' + i + '">הסרה</button>') + "</div>").join("");
+        $("#f-paylist").innerHTML = payments.map((p, i) => '<div class="payrow"><span class="via">' + (METHODS[p.method] ? icon(METHODS[p.method].icon) : "") + esc(mLabel(p.method)) + '</span><b class="num">' + money(p.amount) + '</b><span class="grow">' + fmtDate(p.date) + (p.receipt ? " · קבלה " + esc(p.receipt) : "") + "</span>" + (ro ? "" : '<button type="button" class="btn small danger" data-rmpay="' + i + '">הסרה</button>') + "</div>").join("");
         const rest = Math.max(0, curCharge() - paidSoFar());
         $("#f-newpay-lab").textContent = payments.length ? (rest > 0 ? "תשלום נוסף (נותרו " + money(rest) + ")" : "תשלום נוסף") : "איך שולם?";
         if (segVal("f-method") !== "none" && !$("#f-amount").dataset.touched) $("#f-amount").value = rest || "";
@@ -671,8 +708,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
         if (m && m !== "none") {
           const amount = Number($("#f-amount").value);
           if (!(amount > 0)) return fail("כתבי את סכום התשלום.");
-          const pd = $("#f-paydate").value || todayISO();
-          finalPays.push({ amount, method: m, date: pd, receipt: $("#f-receipt").value.trim() });
+          finalPays.push({ amount, method: m, date: $("#f-paydate").value || todayISO(), receipt: $("#f-receipt").value.trim() });
         }
         $("#f-save").disabled = true;
         try {
@@ -682,8 +718,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
             pid = npid;
           }
           const data = Object.assign({}, existing ? plain(existing) : { createdAt: todayISO() }, { patientId: pid, date, price, status: segVal("f-status"), note: $("#f-note").value.trim(), payments: finalPays });
-          const id = sid || newId("sessions");
-          await setDoc("sessions", id, data);
+          await setDoc("sessions", sid || newId("sessions"), data);
           closeDlg();
           toast(existing ? "הפגישה עודכנה" : "הפגישה נוספה");
           if (!existing && ymOf(date) !== S.month) { S.month = ymOf(date); render(); }
@@ -714,8 +749,8 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
       $("#p-save").addEventListener("click", async () => {
         const name = $("#p-name").value.trim();
         if (!name) { $("#p-err").textContent = "כתבי את שם המטופלת."; $("#p-err").hidden = false; return; }
-        const data = Object.assign({}, p ? { createdAt: p.createdAt || todayISO(), example: !!p.example } : { createdAt: todayISO() }, { name, phone: $("#p-phone").value.trim(), note: $("#p-note").value.trim(), active: p ? segVal("p-active") === "1" : true });
-        if (!data.example) delete data.example;
+        const data = Object.assign({}, p ? { createdAt: p.createdAt || todayISO() } : { createdAt: todayISO() }, { name, phone: $("#p-phone").value.trim(), note: $("#p-note").value.trim(), active: p ? segVal("p-active") === "1" : true });
+        if (p && p.example) data.example = true;
         $("#p-save").disabled = true;
         try { await setDoc("patients", pid || newId("patients"), data); closeDlg(); toast(p ? "הפרטים נשמרו" : "המטופלת נוספה"); }
         catch (e) { $("#p-save").disabled = false; }
@@ -729,14 +764,11 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
     const list = sortedSessions().filter((s) => s.patientId === pid);
     const sm = patientSummary(pid);
     const paidTotal = list.reduce((a, s) => a + paidOf(s), 0);
-    let html = dlgHead(esc(p.name)) +
-      '<div class="tiles" style="grid-template-columns:repeat(3,minmax(0,1fr))">' +
-      tile("יתרה", money(sm.total), sm.total > 0 ? "לתשלום" : "הכל שולם", sm.total > 0 ? "bad" : "good") +
-      tile("שולם", money(paidTotal), "מכל הזמנים", "") + tile("פגישות", String(sm.count), sm.last ? "אחרונה " + fmtDate(sm.last) : "", "") + "</div>" +
-      (p.phone ? '<p class="note">טלפון: <span dir="ltr" class="num" style="user-select:all">' + esc(p.phone) + "</span></p>" : "") +
-      (p.note ? '<p class="note">📝 ' + esc(p.note) + "</p>" : "") +
-      '<div class="filters write-only"><button type="button" class="btn primary" id="pp-new">+ פגישה</button>' + (sm.total > 0 ? '<button type="button" class="btn" id="pp-pay">רישום תשלום</button>' : "") + '<span class="spacer"></span><button type="button" class="btn" id="pp-edit">עריכת פרטים</button></div>' +
-      '<div class="rows" id="pp-rows">' + (list.length ? list.map((s) => sessionRow(s, { noName: true })).join("") : '<div class="empty">עדיין אין פגישות למטופלת הזו.</div>') + "</div>";
+    const html = dlgHead(esc(p.name)) +
+      '<div class="mini"><div class="' + (sm.total > 0 ? "bad" : "good") + '"><span class="lbl">יתרה לתשלום</span><b>' + money(sm.total) + '</b></div><div><span class="lbl">שולם עד היום</span><b>' + money(paidTotal) + '</b></div><div><span class="lbl">פגישות</span><b>' + sm.count + "</b></div></div>" +
+      (p.phone || p.note ? '<p class="note">' + (p.phone ? 'טלפון: <span dir="ltr" class="num" style="user-select:all">' + esc(p.phone) + "</span>" : "") + (p.phone && p.note ? " · " : "") + esc(p.note || "") + "</p>" : "") +
+      '<div class="toolbar write-only"><button type="button" class="btn primary" id="pp-new">' + icon("i-plus") + "פגישה</button>" + (sm.total > 0 ? '<button type="button" class="btn" id="pp-pay">רישום תשלום</button>' : "") + '<span class="grow"></span><button type="button" class="btn" id="pp-edit">עריכת פרטים</button></div>' +
+      '<div class="tbl sess" id="pp-rows">' + (list.length ? list.map((s) => sessionRow(s, { noName: true })).join("") : '<div class="empty">עדיין אין פגישות למטופלת הזו.</div>') + "</div>";
     openDlg(html, () => {
       const n = $("#pp-new"); if (n) n.addEventListener("click", () => openSession(null, pid));
       const pay = $("#pp-pay"); if (pay) pay.addEventListener("click", () => openPayPatient(pid));
@@ -747,12 +779,13 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
   function openPayPatient(pid) {
     const open = sortedSessions().filter((s) => s.patientId === pid && !isFuture(s) && balOf(s) > 0).reverse(); // oldest first
     const total = open.reduce((a, s) => a + balOf(s), 0);
-    const html = dlgHead("רישום תשלום – " + esc(patientName(pid))) + '<div class="form">' +
-      '<p class="note">יתרה פתוחה: <b class="num">' + money(total) + "</b> על " + open.length + (open.length === 1 ? " פגישה" : " פגישות") + ". התשלום ייזקף לפגישות הוותיקות קודם.</p>" +
+    const html = dlgHead("רישום תשלום · " + esc(patientName(pid))) + '<div class="form">' +
+      '<div class="info">יתרה פתוחה: <span class="num">' + money(total) + "</span> על " + plural(open.length, "פגישה אחת", "פגישות") + "</div>" +
       '<div class="field"><span class="lab">אמצעי תשלום</span>' + segHTML("y-method", methodItems(false), "credit") + "</div>" +
       '<div class="fr"><div class="field"><label for="y-amount">סכום (₪)</label><input id="y-amount" type="number" min="0" step="10" inputmode="numeric" value="' + total + '"></div>' +
       '<div class="field"><label for="y-date">תאריך תשלום</label><input id="y-date" type="date" value="' + todayISO() + '"></div>' +
       '<div class="field"><label for="y-receipt">מספר קבלה</label><input id="y-receipt" placeholder="לא חובה"></div></div>' +
+      '<p class="note">התשלום נזקף קודם לפגישות הוותיקות.</p>' +
       '<div id="y-err" class="banner" hidden></div></div>' +
       '<div class="dlg-f"><div class="end"><button type="button" class="btn" data-close>ביטול</button><button type="button" class="btn primary" id="y-save">רישום התשלום</button></div></div>';
     openDlg(html, () => {
@@ -761,14 +794,14 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
         let amount = Number($("#y-amount").value);
         const err = $("#y-err");
         if (!(amount > 0)) { err.textContent = "כתבי סכום גדול מאפס."; err.hidden = false; return; }
-        if (amount > total) { err.textContent = "הסכום גבוה מהיתרה (" + money(total) + "). אם שולמה מקדמה לפגישה עתידית, רשמי אותה בפגישה עצמה."; err.hidden = false; return; }
+        if (amount > total) { err.textContent = "הסכום גבוה מהיתרה (" + money(total) + "). מקדמה לפגישה עתידית רושמים בפגישה עצמה."; err.hidden = false; return; }
         $("#y-save").disabled = true;
         const method = segVal("y-method"), date = $("#y-date").value || todayISO(), receipt = $("#y-receipt").value.trim();
         try {
           for (const s of open) {
             if (amount <= 0) break;
             const part = Math.min(amount, balOf(s));
-            const payments = (s.payments || []).map((p) => Object.assign({}, p)).concat([{ amount: part, method, date, receipt }]);
+            const payments = (s.payments || []).map((x) => Object.assign({}, x)).concat([{ amount: part, method, date, receipt }]);
             await updDoc("sessions", s.id, { payments });
             amount -= part;
           }
@@ -783,18 +816,18 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
   function inRange(iso, range) { if (!iso) return false; if (range === "all") return true; if (range === "year") return iso.slice(0, 4) === S.month.slice(0, 4); return ymOf(iso) === S.month; }
   async function doExport(kind) {
     const range = $("#exp-range").value;
-    let rows, name;
     const tag = range === "all" ? "all" : range === "year" ? S.month.slice(0, 4) : S.month;
+    let rows, name;
     if (kind === "payments") {
       rows = [["תאריך תשלום", "מטופלת", "סכום", "אמצעי תשלום", "מספר קבלה", "תאריך הפגישה", "הערה"]];
       const list = [];
-      S.sessions.forEach((s) => (s.payments || []).forEach((p) => { if (inRange(p.date, range)) list.push([p.date, patientName(s.patientId), p.amount, (METHODS[p.method] || { label: p.method }).label, p.receipt || "", s.date, s.note || ""]); }));
+      S.sessions.forEach((s) => (s.payments || []).forEach((p) => { if (inRange(p.date, range)) list.push([p.date, patientName(s.patientId), p.amount, mLabel(p.method), p.receipt || "", s.date, s.note || ""]); }));
       list.sort((a, b) => (a[0] < b[0] ? -1 : 1)).forEach((r) => { r[0] = fmtDate(r[0]); r[5] = fmtDate(r[5]); rows.push(r); });
       name = "payments-" + tag + ".csv";
     } else {
       rows = [["תאריך", "מטופלת", "סטטוס", "חיוב", "שולם", "יתרה", "אמצעי תשלום", "מספרי קבלה", "הערה"]];
       sortedSessions().reverse().filter((s) => inRange(s.date, range)).forEach((s) => {
-        rows.push([fmtDate(s.date), patientName(s.patientId), STATUS[s.status], charge(s), paidOf(s), balOf(s), Array.from(new Set((s.payments || []).map((p) => (METHODS[p.method] || { label: p.method }).label))).join(" + "), (s.payments || []).map((p) => p.receipt).filter(Boolean).join(" "), s.note || ""]);
+        rows.push([fmtDate(s.date), patientName(s.patientId), STATUS[s.status], charge(s), paidOf(s), balOf(s), Array.from(new Set((s.payments || []).map((p) => mLabel(p.method)))).join(" + "), (s.payments || []).map((p) => p.receipt).filter(Boolean).join(" "), s.note || ""]);
       });
       name = "sessions-" + tag + ".csv";
     }
@@ -809,17 +842,12 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
   $("#add-session").addEventListener("click", () => { if (S.ready) openSession(null); });
   $$(".tabs button").forEach((b) => b.addEventListener("click", () => { S.tab = b.dataset.tab; try { localStorage.setItem("gvia-tab", S.tab); } catch (e) { /* ignore */ } render(); }));
 
-  function onActionClick(e) {
-    const t = e.target;
-    const qp = t.closest("[data-qp]"); if (qp) { e.stopPropagation(); quickPay(qp.dataset.qp, qp.dataset.m); return true; }
-    const pp = t.closest("[data-pay-patient]"); if (pp) { openPayPatient(pp.dataset.payPatient); return true; }
-    const op = t.closest("[data-open-patient]"); if (op) { openPatient(op.dataset.openPatient); return true; }
-    const ed = t.closest("[data-edit]"); if (ed) { openSession(ed.dataset.edit); return true; }
-    return false;
-  }
   $("#view").addEventListener("click", async (e) => {
-    if (onActionClick(e)) return;
     const t = e.target;
+    const qp = t.closest("[data-qp]"); if (qp) { quickPay(qp.dataset.qp, qp.dataset.m); return; }
+    const pp = t.closest("[data-pay-patient]"); if (pp) { openPayPatient(pp.dataset.payPatient); return; }
+    const op = t.closest("[data-open-patient]"); if (op) { openPatient(op.dataset.openPatient); return; }
+    const ed = t.closest("[data-edit]"); if (ed) { openSession(ed.dataset.edit); return; }
     const f = t.closest("[data-filter]"); if (f) { S.filter = f.dataset.filter; render(); return; }
     if (t.closest("[data-new-session]")) { openSession(null); return; }
     if (t.closest("#add-patient")) { openPatientEdit(null); return; }
@@ -832,10 +860,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
       return;
     }
     const ce = t.closest("#clear-examples");
-    if (ce) {
-      ce.outerHTML = '<div class="confirm">למחוק את כל נתוני הדוגמה? הנתונים שלך לא יימחקו. <button type="button" class="btn small danger" id="clear-examples2">כן, למחוק</button></div>';
-      return;
-    }
+    if (ce) { ce.outerHTML = '<div class="confirm">למחוק את כל נתוני הדוגמה? הנתונים שלך לא יימחקו. <button type="button" class="btn small danger" id="clear-examples2">כן, למחוק</button></div>'; return; }
     if (t.closest("#clear-examples2")) {
       try {
         for (const s of Array.from(S.sessions.values()).filter((x) => x.example)) await delDoc("sessions", s.id);
@@ -853,8 +878,8 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
   });
 
   function applyWriteMode() {
-    document.getElementById("app").classList.toggle("readonly", !S.canWrite);
-    $("#dlg-body").classList.toggle("readonly", !S.canWrite);
+    $("#app").classList.toggle("readonly", !S.canWrite);
+    body.classList.toggle("readonly", !S.canWrite);
     const b = $("#banner");
     b.hidden = S.canWrite;
     b.textContent = "מצב צפייה בלבד: אפשר לראות את הנתונים, אבל לא לשנות אותם.";
@@ -870,7 +895,7 @@ dialog::backdrop { background: rgba(20, 12, 30, .45); }
     if (!db) { S.noDb = true; render(); return; }
     S.db = db;
     if (user) { const can = await user.can("data.write"); if (can === false) { S.canWrite = false; applyWriteMode(); } }
-    let got = { p: false, s: false, c: false };
+    const got = { p: false, s: false, c: false };
     const mark = (k) => { got[k] = true; if (got.p && got.s && got.c) S.ready = true; render(); };
     const onErr = () => { toast("החיבור לנתונים נקטע. רענני את הדף."); };
     db.doc("settings/main").onSnapshot((snap) => {
