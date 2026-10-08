@@ -1,0 +1,8 @@
+{
+  "name": "verify-holidays",
+  "private": true,
+  "description": "Checks the dashboard holiday calendar against Hebcal",
+  "dependencies": {
+    "@hebcal/core": "^5.0.0"
+  }
+}

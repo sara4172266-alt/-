@@ -369,6 +369,36 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .restore-pick { display: inline-flex; }
 .restore-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
+/* day window */
+dialog.wide { width: min(1000px, calc(100vw - 24px)); }
+.dd-h { align-items: flex-start; }
+.dd-title { display: grid; gap: 2px; min-width: 0; }
+.dd-title h2 { font-size: 1.3rem; }
+.dd-heb { color: var(--accent); font-weight: 500; }
+.dd-title .hols { justify-content: flex-start; }
+.dd-nav { display: flex; gap: 6px; align-items: center; flex: none; }
+.today-tag { font-size: .75rem; font-weight: 600; background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 1px 9px; vertical-align: middle; }
+.dd-mini .sub { font-size: .8rem; }
+.dd-body { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.dd-grid { max-height: min(62vh, 640px); overflow-y: auto; border-radius: 12px; }
+.dd-grid .wk { --hh: 64px; }
+.dd-list { display: grid; gap: 10px; align-content: start; max-height: min(62vh, 640px); overflow-y: auto; }
+.dd-list .sess .th { display: none; }
+.dd-list .sess .tr { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "dt dt" "nm amt" "stc stc" "pay pay"; row-gap: 4px; margin-inline: 0; }
+.dd-list .sess .dt { grid-area: dt; display: flex; flex-wrap: wrap; gap: 0 8px; }
+.dd-list .sess .dt .dg, .dd-list .sess .dt .dh { display: none; }
+.dd-list .sess .nm { grid-area: nm; font-size: 1.02rem; }
+.dd-list .sess .amtc { grid-area: amt; }
+.dd-list .sess .stc { grid-area: stc; }
+.dd-list .sess .pay { grid-area: pay; justify-content: flex-start; }
+.dd-list .sess .edit-hint { display: none; }
+@media (max-width: 760px) {
+  .dd-body { grid-template-columns: minmax(0, 1fr); }
+  .dd-grid { max-height: 46vh; }
+  .dd-list { max-height: none; overflow: visible; }
+  .dd-title h2 { font-size: 1.1rem; }
+}
+
 /* forms */
 .check { display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); }
@@ -868,35 +898,21 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     return '<span class="ev ' + st.cls + '" data-ev="' + esc(s.id) + '" tabindex="0" role="button" title="' + esc(patientName(s.patientId)) + " · " + st.label + '">' + (s.time ? '<span class="et">' + s.time + "</span>" : "") + esc(patientName(s.patientId)) + "</span>";
   }
 
-  function weekHTML(list) {
+  function gridHTML(showDays, byDay, withHeader) {
     const today = todayISO();
-    const days = []; for (let i = 0; i < 7; i++) days.push(addDays(S.weekStart, i));
-    if (!days.includes(S.selDay)) S.selDay = days.includes(today) ? today : days[0];
-    const byDay = groupByDay(list);
-    const showDays = narrow() ? [S.selDay] : days;
     let startH = Number(S.settings.dayStart), endH = Number(S.settings.dayEnd);
     showDays.forEach((d) => (byDay.get(d) || []).forEach((s) => { const t = timeOf(s); if (t == null) return; startH = Math.min(startH, Math.floor(t / 60)); endH = Math.max(endH, Math.ceil((t + durOf(s)) / 60)); }));
     endH = Math.min(24, Math.max(endH, startH + 1));
-
-    let h = '<div class="wk-nav"><button type="button" class="btn icon-btn" data-wk="-1" aria-label="השבוע הקודם">' + icon("i-prev") + "</button>" +
-      '<div class="wk-title"><b>' + gregRange(days[0], days[6]) + "</b><span>" + hebRange(days[0], days[6]) + "</span></div>" +
-      '<button type="button" class="btn icon-btn" data-wk="1" aria-label="השבוע הבא">' + icon("i-next") + "</button>" +
-      '<button type="button" class="btn small" data-wk="0">היום</button></div>';
-    h += LEGEND;
-    if (narrow()) {
-      h += '<div class="strip">' + days.map((d, i) => {
-        const n = (byDay.get(d) || []).length;
-        return '<button type="button" class="sd' + (d === S.selDay ? " sel" : "") + (d === today ? " today" : "") + (isRest(d) ? " sat" : "") + '" data-day="' + d + '"><span>' + WD_SHORT[i] + "</span><b>" + Number(d.slice(8)) + "</b><small>" + heb(d).day + "</small>" + (n ? '<i class="num">' + n + "</i>" : "") + "</button>";
-      }).join("") + "</div>";
-    }
-
+    let h = "";
     const untimed = showDays.some((d) => (byDay.get(d) || []).some((s) => timeOf(s) == null));
     h += '<div class="wk-wrap"><div class="wk" style="--cols:' + showDays.length + '">';
-    // header
-    h += '<div class="wk-corner"></div>' + showDays.map((d) => {
-      const i = dow(d), hb = heb(d);
-      return '<div class="wh' + (d === today ? " today" : "") + (d === S.selDay ? " sel" : "") + (isRest(d) ? " sat" : "") + '" data-day="' + d + '" tabindex="0"><span class="wn">' + WD_NAME[i] + '</span><span class="gd">' + fullDate(d, true) + '</span><span class="hd">' + hebFull(d) + "</span>" + holChips(d) + "</div>";
-    }).join("");
+    if (withHeader) {
+      // header
+      h += '<div class="wk-corner"></div>' + showDays.map((d) => {
+        const i = dow(d), hb = heb(d);
+        return '<div class="wh' + (d === today ? " today" : "") + (d === S.selDay ? " sel" : "") + (isRest(d) ? " sat" : "") + '" data-day="' + d + '" tabindex="0"><span class="wn">' + WD_NAME[i] + '</span><span class="gd">' + fullDate(d, true) + '</span><span class="hd">' + hebFull(d) + "</span>" + holChips(d) + "</div>";
+      }).join("");
+    }
     if (untimed) {
       h += '<div class="wk-allday-l">ללא שעה</div>' + showDays.map((d) => '<div class="wk-allday' + (isRest(d) ? " sat" : "") + '">' + (byDay.get(d) || []).filter((s) => timeOf(s) == null).map(evChip).join("") + "</div>").join("");
     }
@@ -919,6 +935,29 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       h += "</div>";
     });
     h += "</div></div>";
+    return h;
+  }
+
+  function weekHTML(list) {
+    const today = todayISO();
+    const days = []; for (let i = 0; i < 7; i++) days.push(addDays(S.weekStart, i));
+    if (!days.includes(S.selDay)) S.selDay = days.includes(today) ? today : days[0];
+    const byDay = groupByDay(list);
+    const showDays = narrow() ? [S.selDay] : days;
+
+    let h = '<div class="wk-nav"><button type="button" class="btn icon-btn" data-wk="-1" aria-label="השבוע הקודם">' + icon("i-prev") + "</button>" +
+      '<div class="wk-title"><b>' + gregRange(days[0], days[6]) + "</b><span>" + hebRange(days[0], days[6]) + "</span></div>" +
+      '<button type="button" class="btn icon-btn" data-wk="1" aria-label="השבוע הבא">' + icon("i-next") + "</button>" +
+      '<button type="button" class="btn small" data-wk="0">היום</button></div>';
+    h += LEGEND;
+    if (narrow()) {
+      h += '<div class="strip">' + days.map((d, i) => {
+        const n = (byDay.get(d) || []).length;
+        return '<button type="button" class="sd' + (d === S.selDay ? " sel" : "") + (d === today ? " today" : "") + (isRest(d) ? " sat" : "") + '" data-day="' + d + '"><span>' + WD_SHORT[i] + "</span><b>" + Number(d.slice(8)) + "</b><small>" + heb(d).day + "</small>" + (n ? '<i class="num">' + n + "</i>" : "") + "</button>";
+      }).join("") + "</div>";
+    }
+
+    h += gridHTML(showDays, byDay, true);
     h += '<p class="note write-only">לחיצה על משבצת ריקה פותחת פגישה חדשה בשעה הזו. לחיצה על פגישה מציגה את פרטיה ומאפשרת לסמן תשלום. במחשב אפשר לגרור פגישה ליום או לשעה אחרים.</p>';
     h += dayPanelHTML(byDay);
     return h;
@@ -950,8 +989,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const tail = (7 - ((first + days) % 7)) % 7;
     for (let i = 0; i < tail; i++) h += '<div class="day out" aria-hidden="true"></div>';
     h += "</div>";
-    if (S.selDay) h += dayPanelHTML(byDay);
-    else h += '<p class="note">בחרי יום בלוח כדי לראות את הפגישות שלו ולסמן תשלומים.</p>';
+    h += '<p class="note">לחיצה על יום פותחת אותו בגדול, עם כל הפגישות לפי שעות. לחיצה על שם של מטופלת מציגה את פרטי הפגישה.</p>';
     return h;
   }
 
@@ -1062,8 +1100,9 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
 
   // ---------- dialogs ----------
   const dlg = $("#dlg"), body = $("#dlg-body");
-  function openDlg(html, wire) { body.innerHTML = html; if (!dlg.open) dlg.showModal(); body.scrollTop = 0; wire && wire(); }
-  function closeDlg() { if (dlg.open) dlg.close(); }
+  function openDlg(html, wire) { S.dayDlg = ""; dlg.classList.remove("wide"); body.innerHTML = html; if (!dlg.open) dlg.showModal(); body.scrollTop = 0; wire && wire(); }
+  function closeDlg() { if (dlg.open) dlg.close(); S.dayDlg = ""; dlg.classList.remove("wide"); }
+  dlg.addEventListener("close", () => { S.dayDlg = ""; dlg.classList.remove("wide"); });
   dlg.addEventListener("click", (e) => { if (e.target === dlg) closeDlg(); });
   const dlgHead = (t) => '<div class="dlg-h"><h2>' + t + '</h2><button type="button" class="x" data-close aria-label="סגירה">×</button></div>';
   body.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeDlg(); });
@@ -1118,7 +1157,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       '<div id="f-err" class="banner" hidden></div>' +
       "</div>" +
       '<div class="dlg-f">' + (existing && !ro ? '<button type="button" class="btn danger" id="f-del">מחיקת הפגישה</button>' : "") +
-      '<div class="end"><button type="button" class="btn" data-close>ביטול</button>' + (ro ? "" : (existing ? "" : '<button type="button" class="btn" id="f-save-next">שמירה והוספת עוד</button>') + '<button type="button" class="btn primary" id="f-save">שמירה</button>') + "</div></div>";
+      '<div class="end"><button type="button" class="btn" ' + (opts && opts.returnDay ? 'data-back-day="' + opts.returnDay + '">חזרה ליום' : "data-close>ביטול") + "</button>" + (ro ? "" : (existing ? "" : '<button type="button" class="btn" id="f-save-next">שמירה והוספת עוד</button>') + '<button type="button" class="btn primary" id="f-save">שמירה</button>') + "</div></div>";
 
     openDlg(html, () => {
       const curCharge = () => (segVal("f-status") === "free" ? 0 : Number($("#f-price").value) || 0);
@@ -1192,7 +1231,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
         const later = existing.seriesId ? Array.from(S.sessions.values()).filter((x) => x.seriesId === existing.seriesId && x.date > existing.date && paidOf(x) === 0) : [];
         del.outerHTML = '<div class="confirm">למחוק את הפגישה לצמיתות? <button type="button" class="btn small danger" id="f-del2">רק את הפגישה הזו</button>' + (later.length ? '<button type="button" class="btn small danger" id="f-del3">גם את ' + later.length + " הפגישות הבאות בסדרה</button>" : "") + "</div>";
         const copy = plain(existing);
-        $("#f-del2").addEventListener("click", () => { delDoc("sessions", sid).then(() => { closeDlg(); toast("הפגישה נמחקה", () => setDoc("sessions", sid, copy)); }, () => {}); });
+        $("#f-del2").addEventListener("click", () => { delDoc("sessions", sid).then(() => { closeDlg(); toast("הפגישה נמחקה", () => setDoc("sessions", sid, copy)); if (opts && opts.returnDay) openDay(opts.returnDay); }, () => {}); });
         const d3 = $("#f-del3");
         if (d3) d3.addEventListener("click", async () => {
           const copies = [[sid, copy]].concat(later.map((x) => [x.id, plain(x)]));
@@ -1249,7 +1288,8 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
             toast(existing ? (more ? "עודכנו הפגישה ועוד " + more + " פגישות בסדרה" : "הפגישה עודכנה") : "הפגישה נוספה");
           }
           if (!existing) { S.selDay = date; S.month = ymOf(date); if (date < S.weekStart || date > addDays(S.weekStart, 6)) S.weekStart = sundayOf(date); render(); }
-          if (next) { const t0 = timeOf({ time: data.time }); openSession(null, "", date, t0 != null ? fmtT(t0 + data.duration) : ""); }
+          if (next) { const t0 = timeOf({ time: data.time }); openSession(null, "", date, t0 != null ? fmtT(t0 + data.duration) : "", opts && opts.returnDay ? { returnDay: date } : null); }
+          else if (opts && opts.returnDay) openDay(opts.returnDay);
         } catch (e) { $("#f-save").disabled = false; }
       };
       $("#f-save").addEventListener("click", () => doSave(false));
@@ -1382,23 +1422,30 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       }
       if (m === "Tevet" && d === 10) add("עשרה בטבת", "fast");
       if (m === "Shevat" && d === 15) add("ט״ו בשבט", "minor");
+      if (m === "Kislev" && d === 24) add("ערב חנוכה", "erev");
+      if (m === "Adar I") { if (d === 14) add("פורים קטן", "minor"); if (d === 15) add("שושן פורים קטן", "minor"); }
       if (m === "Adar" || m === "Adar II") {
         if ((d === 13 && w !== 6) || (d === 11 && w === 4)) add("תענית אסתר", "fast");
+        if (d === 13) add("ערב פורים", "erev");
         if (d === 14) add("פורים", "minor");
         if (d === 15) add("שושן פורים", "minor");
       }
       if (m === "Nisan") {
+        if ((d === 14 && w !== 6) || (d === 12 && w === 4)) add("תענית בכורות", "fast");
         if (d === 14) add("ערב פסח", "erev");
         if (d === 15) add("פסח", "yt");
         if (d >= 16 && d <= 20) add("חול המועד פסח", "chol");
         if (d === 21) add("שביעי של פסח", "yt");
       }
+      if (m === "Iyar" && d === 14) add("פסח שני", "minor");
       if (m === "Iyar" && d === 18) add("ל״ג בעומר", "minor");
       if (m === "Sivan") { if (d === 5) add("ערב שבועות", "erev"); if (d === 6) add("שבועות", "yt"); }
       if (m === "Tamuz" && ((d === 17 && w !== 6) || (d === 18 && w === 0))) add("י״ז בתמוז", "fast");
+      if (m === "Av" && ((d === 8 && w !== 5) || (d === 9 && w === 6))) add("ערב תשעה באב", "erev");
       if (m === "Av" && ((d === 9 && w !== 6) || (d === 10 && w === 0))) add("תשעה באב", "fast");
+      if (m === "Av" && d === 15) add("ט״ו באב", "minor");
       if ((d === 1 && m !== "Tishri") || d === 30) add("ראש חודש", "rc");
-      for (let k = 0; k < 8; k++) { const x = hm(addDays(iso, -k)); if (x.m === "Kislev" && x.d === 25) { add("חנוכה · נר " + (k + 1), "minor"); break; } }
+      for (let k = 0; k < 8; k++) { const x = hm(addDays(iso, -k)); if (x.m === "Kislev" && x.d === 25) { add("חנוכה · יום " + (k + 1), "minor"); break; } }
     }
     holCache.set(iso, r);
     return r;
@@ -1627,6 +1674,58 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     } catch (e) { if (go) go.disabled = false; if (prog) prog.textContent = "השחזור נעצר באמצע. אפשר ללחוץ שוב כדי להשלים אותו."; }
   }
 
+
+  // ---------- day window (from the month view) ----------
+  function openDay(iso, refresh) {
+    const prevScroll = refresh && $("#day-scroll") ? $("#day-scroll").scrollTop : null;
+    const byDay = groupByDay(Array.from(S.sessions.values()).filter((x) => x.date === iso));
+    const evs = byDay.get(iso) || [];
+    const charged = evs.filter((x) => x.status !== "free");
+    const total = charged.reduce((a, x) => a + charge(x), 0), paid = charged.reduce((a, x) => a + Math.min(charge(x), paidOf(x)), 0);
+    const cancelled = evs.filter((x) => x.status !== "held").length;
+    const future = iso > todayISO();
+    const html = '<div class="dlg-h dd-h"><div class="dd-title"><h2>יום ' + WD_NAME[dow(iso)] + ", " + fmtDate(iso) + (iso === todayISO() ? ' <span class="today-tag">היום</span>' : "") + "</h2>" +
+      '<span class="dd-heb">' + hebFull(iso) + "</span>" + holChips(iso) + "</div>" +
+      '<div class="dd-nav"><button type="button" class="btn icon-btn" data-dd="-1" aria-label="היום הקודם" title="היום הקודם">' + icon("i-prev") + '</button><button type="button" class="btn icon-btn" data-dd="1" aria-label="היום הבא" title="היום הבא">' + icon("i-next") + '</button><button type="button" class="x" data-close aria-label="סגירה">×</button></div></div>' +
+      (isRest(iso) ? '<div class="warnbox"><span>' + restName(iso) + ". בדרך כלל אין פגישות ביום הזה.</span></div>" : "") +
+      '<div class="mini dd-mini"><div><span class="lbl">פגישות ביום</span><b>' + charged.length + "</b>" + (cancelled ? '<span class="sub">' + plural(cancelled, "ביטול אחד", "ביטולים") + "</span>" : "") + "</div>" +
+      '<div class="' + (total - paid > 0 && !future ? "bad" : "") + '"><span class="lbl">' + (future ? "צפוי לגבייה" : "נותר לגבות") + "</span><b>" + money(total - paid) + "</b></div>" +
+      '<div class="good"><span class="lbl">שולם</span><b>' + money(paid) + "</b></div></div>" +
+      '<div class="dd-body"><div class="dd-grid" id="day-scroll">' + gridHTML([iso], byDay, false) + "</div>" +
+      '<div class="dd-list"><div class="toolbar write-only"><button type="button" class="btn primary small" data-dd-new>' + icon("i-plus") + "פגישה ביום הזה</button></div>" +
+      (evs.length ? '<div class="tbl sess" id="dd-rows">' + evs.map((x) => sessionRow(x)).join("") + "</div>" : '<div class="empty">אין פגישות ביום הזה.<span class="write-only">לחיצה על שעה בלוח פותחת פגישה חדשה.</span></div>') +
+      "</div></div>";
+    openDlg(html, () => {
+      S.dayDlg = iso;
+      dlg.classList.add("wide");
+      const sc = $("#day-scroll"), col = sc && sc.querySelector(".wk-col");
+      if (!sc || !col) return;
+      if (prevScroll != null) { sc.scrollTop = prevScroll; return; }
+      const first = evs.map(timeOf).filter((t) => t != null).sort((a, b) => a - b)[0];
+      if (first != null) {
+        const hh = col.offsetHeight / Number(col.dataset.hours);
+        sc.scrollTop = Math.max(0, ((first - Number(col.dataset.start) * 60) / 60) * hh - 24);
+      }
+    });
+  }
+  body.addEventListener("click", (e) => {
+    const t = e.target;
+    const bd = t.closest("[data-back-day]"); if (bd) { openDay(bd.dataset.backDay); return; }
+    if (!S.dayDlg) return;
+    const day = S.dayDlg, back = { returnDay: day };
+    const dd = t.closest("[data-dd]"); if (dd) { openDay(addDays(day, Number(dd.dataset.dd))); return; }
+    if (t.closest("[data-dd-new]")) { openSession(null, S.patientFilter, day, "", back); return; }
+    const sl = t.closest("[data-slot]"); if (sl) { if (!S.canWrite) return; const [d, tm] = sl.dataset.slot.split("|"); openSession(null, S.patientFilter, d, tm, back); return; }
+    const q = t.closest("[data-qp]"); if (q) { quickPay(q.dataset.qp, q.dataset.m); return; }
+    const ev = t.closest("[data-ev]"); if (ev) { openSession(ev.dataset.ev, null, null, null, back); return; }
+    const ed = t.closest("[data-edit]"); if (ed) { openSession(ed.dataset.edit, null, null, null, back); return; }
+  });
+  body.addEventListener("keydown", (e) => {
+    if (!S.dayDlg) return;
+    const ev = e.target.closest && e.target.closest("[data-ev]");
+    if (ev && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openSession(ev.dataset.ev, null, null, null, { returnDay: S.dayDlg }); }
+  });
+
   // ---------- export ----------
   function csv(rows) { return "﻿" + rows.map((r) => r.map((c) => { const s = String(c == null ? "" : c); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(",")).join("\r\n"); }
   function inRange(iso, range) { if (!iso) return false; if (range === "all") return true; if (range === "year") return iso.slice(0, 4) === S.month.slice(0, 4); return ymOf(iso) === S.month; }
@@ -1682,7 +1781,8 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       S.month = ymOf(addDays(S.weekStart, 3));
       render(); return;
     }
-    const dy = t.closest("[data-day]"); if (dy) { S.selDay = dy.dataset.day; render(); return; }
+    const dy = t.closest("[data-day]");
+    if (dy) { S.selDay = dy.dataset.day; if (S.tab === "sessions" && S.sview === "month") { $$(".cal .day.sel").forEach((x) => x.classList.remove("sel")); dy.classList.add("sel"); openDay(dy.dataset.day); } else render(); return; }
     const f = t.closest("[data-filter]"); if (f) { S.filter = f.dataset.filter; render(); return; }
     const pf = t.closest("[data-pfilter]"); if (pf) { S.pFilter = pf.dataset.pfilter; render(); return; }
     const sv = t.closest("[data-sview]"); if (sv) { S.sview = sv.dataset.sview; try { localStorage.setItem("gvia-sview", S.sview); } catch (err) { /* ignore */ } render(); return; }
@@ -1723,6 +1823,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const evk = e.target.closest && e.target.closest("[data-ev]");
     if (evk && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); e.stopPropagation(); openPop(evk.dataset.ev, evk); return; }
     const d = e.target.closest && e.target.closest("[data-day]");
+    if (d && (e.key === "Enter" || e.key === " ") && S.tab === "sessions" && S.sview === "month") { e.preventDefault(); S.selDay = d.dataset.day; openDay(d.dataset.day); return; }
     if (d && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); S.selDay = d.dataset.day; render(); const el = $('[data-day="' + S.selDay + '"]'); if (el) el.focus(); }
   });
   try { window.matchMedia("(max-width: 700px)").addEventListener("change", () => { if (S.tab === "sessions") render(); }); } catch (e) { /* old browser */ }
@@ -1767,6 +1868,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     db.collection("sessions").onSnapshot((snap) => {
       S.sessions = new Map(snap.docs.map((d) => [d.id, Object.assign({ id: d.id, payments: [], status: "held", note: "" }, d.data())]));
       mark("s");
+      if (dlg.open && S.dayDlg) openDay(S.dayDlg, true);
     }, onErr);
   })();
 })();
