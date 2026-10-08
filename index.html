@@ -20,6 +20,8 @@
   --good-soft: #e5f3eb;
   --bad: #b3261e;
   --bad-soft: #fcebe9;
+  --warn: #8a5a00;
+  --warn-soft: #fbf1dc;
   --shadow: 0 1px 2px rgba(16, 24, 40, .05);
   --f-display: "Heebo", "Arial Hebrew", Arial, sans-serif;
   --f-body: "Heebo", "Arial Hebrew", Arial, sans-serif;
@@ -29,14 +31,14 @@
   :root:not([data-theme="light"]) {
     --bg: #111418; --surface: #191e25; --surface-2: #1f252d; --ink: #eef1f5; --ink-2: #b9c1cc; --muted: #868f9c; --line: #2b323c;
     --accent: #93b4e4; --accent-ink: #0f1722; --accent-soft: #1e2a3a; --bar: #344760;
-    --good: #5fc991; --good-soft: #17301f; --bad: #f08c84; --bad-soft: #3a1d1b; --shadow: none;
+    --good: #5fc991; --good-soft: #17301f; --bad: #f08c84; --bad-soft: #3a1d1b; --warn: #e8b552; --warn-soft: #3a2e15; --shadow: none;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #111418; --surface: #191e25; --surface-2: #1f252d; --ink: #eef1f5; --ink-2: #b9c1cc; --muted: #868f9c; --line: #2b323c;
   --accent: #93b4e4; --accent-ink: #0f1722; --accent-soft: #1e2a3a; --bar: #344760;
-  --good: #5fc991; --good-soft: #17301f; --bad: #f08c84; --bad-soft: #3a1d1b; --shadow: none;
+  --good: #5fc991; --good-soft: #17301f; --bad: #f08c84; --bad-soft: #3a1d1b; --warn: #e8b552; --warn-soft: #3a2e15; --shadow: none;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -51,7 +53,7 @@ button { cursor: pointer; }
 .ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 /* header */
-.top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 12px 16px; }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 12px 16px; }
 .brand h1 { font-family: var(--f-display); font-weight: 500; font-size: 1.45rem; line-height: 1.15; }
 .brand p { margin: 0; color: var(--muted); font-size: .92rem; }
 .month { display: flex; align-items: center; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
@@ -68,6 +70,8 @@ button { cursor: pointer; }
 @media (max-width: 640px) {
   .top { grid-template-columns: minmax(0, 1fr) auto; }
   .top .month { grid-column: 1 / -1; justify-self: stretch; justify-content: space-between; }
+  .top .gsearch { grid-column: 1 / -1; order: 5; }
+  .gsearch input { width: 100%; }
   .brand h1 { font-size: 1.25rem; }
 }
 
@@ -321,6 +325,50 @@ button { cursor: pointer; }
   .hdn { font-size: .68rem; }
 }
 
+/* popover, holidays, search, drag */
+.pop { position: fixed; z-index: 20; width: 300px; max-width: calc(100vw - 16px); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.18); padding: 14px; display: grid; gap: 6px; }
+.pop.sheet { inset-inline: 0; bottom: 0; top: auto !important; left: 0 !important; width: 100%; max-width: none; border-radius: 16px 16px 0 0; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.pop-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pop-h b { font-size: 1.05rem; font-weight: 600; }
+.pop-h .x { border: 0; background: none; font-size: 1.3rem; line-height: 1; color: var(--muted); width: 30px; height: 30px; border-radius: 8px; }
+.pop-h .x:hover { background: var(--surface-2); }
+.pop-r { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-block: 6px; border-top: 1px solid var(--line); margin-top: 4px; }
+.pop-pay { display: grid; gap: 4px; }
+.pop-pay .pay { justify-content: flex-start; flex-wrap: wrap; }
+.pop-f { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+.readonly .pop .write-only { display: none !important; }
+.hols { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; margin-top: 3px; }
+.hol { font-size: .72rem; font-weight: 500; border-radius: 6px; padding: 0 6px; line-height: 1.6; white-space: nowrap; background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); }
+.hol.yt { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.hol.chol, .hol.minor { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.hol.fast { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.hol.rc { color: var(--accent); }
+.holm { display: block; font-size: .72rem; font-weight: 500; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.holm.yt { color: var(--ink); font-weight: 600; }
+.holm.fast { color: var(--warn); }
+.warnbox { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 9px 12px; font-weight: 500; display: grid; gap: 2px; }
+.gsearch { position: relative; min-width: 0; }
+.gsearch input { width: 220px; max-width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 12px; }
+.gsearch input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.gres { position: absolute; top: calc(100% + 4px); inset-inline: 0; min-width: 260px; z-index: 15; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.14); padding: 4px; display: grid; }
+.gr { border: 0; background: none; text-align: right; padding: 8px 10px; border-radius: 8px; display: grid; gap: 0; }
+.gr b { font-weight: 600; }
+.gr:hover, .gr:focus-visible, .gr.first { background: var(--surface-2); }
+.gr.none { color: var(--muted); }
+.we { cursor: pointer; }
+@media (hover: hover) { .we { cursor: grab; } }
+.we.dragging { opacity: .35; }
+.we.ghost { pointer-events: none; background: var(--accent); color: var(--accent-ink); opacity: .9; z-index: 4; border-inline-start-color: var(--accent-ink); }
+.we.ghost b { color: var(--accent-ink); }
+body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none; }
+.debts .btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 560px) {
+  .debts .tr { grid-template-columns: minmax(0, 1fr) auto; }
+  .debts .btns { grid-column: 1 / -1; justify-content: flex-start; }
+}
+.restore-pick { display: inline-flex; }
+.restore-pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
 /* forms */
 .check { display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); }
@@ -382,6 +430,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       <h1 id="clinic-name">יומן גבייה</h1>
       <p id="today-line"></p>
     </div>
+    <div class="gsearch"><input id="g-search" type="search" placeholder="חיפוש מטופלת…  ( / )" autocomplete="off" aria-label="חיפוש מטופלת"><div class="gres" id="g-res" hidden></div></div>
     <div class="month" role="group" aria-label="בחירת חודש">
       <button type="button" id="m-prev" aria-label="החודש הקודם"><svg class="ico"><use href="#i-prev"/></svg></button>
       <b id="m-label"></b>
@@ -402,6 +451,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
   <main id="view"></main>
 </div>
 
+<div class="pop" id="pop" hidden dir="rtl" lang="he" role="dialog" aria-label="פרטי פגישה"></div>
 <dialog id="dlg"><div class="dlg" id="dlg-body" dir="rtl" lang="he"></div></dialog>
 <div class="toast" id="toast" hidden dir="rtl"><span id="toast-msg"></span><button type="button" id="toast-undo" hidden>ביטול</button></div>
 
@@ -559,7 +609,10 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     $("#m-label").textContent = monthName(S.month);
     $$(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === S.tab)));
     const v = $("#view");
+    closePop();
     const focusId = document.activeElement && v.contains(document.activeElement) ? document.activeElement.id : "";
+    const keep = S.tab === "settings" && S.lastTab === "settings" ? $$("input[id], textarea[id], select[id]", v).filter((x) => x.type !== "file").map((x) => [x.id, x.value]) : [];
+    S.lastTab = S.tab;
     if (S.noDb) { v.innerHTML = '<div class="card"><div class="empty"><b>הנתונים לא זמינים כאן</b><span>פתחי את הדף מתוך claude.ai כשאת מחוברת לחשבון, כדי לראות ולשמור את נתוני הגבייה.</span></div></div>'; return; }
     if (!S.ready) { v.innerHTML = '<div class="card"><div class="empty">טוען את הנתונים…</div></div>'; return; }
     if (S.tab === "dash") v.innerHTML = viewDash();
@@ -567,6 +620,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     else if (S.tab === "patients") v.innerHTML = viewPatients();
     else v.innerHTML = viewSettings();
     if (S.tab === "dash") wireChart();
+    keep.forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
     if (focusId) { const el = document.getElementById(focusId); if (el) { el.focus(); if (el.setSelectionRange && el.type === "search") el.setSelectionRange(el.value.length, el.value.length); } }
   }
 
@@ -603,6 +657,10 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const pct = billed > 0 ? Math.round((billedPaid / billed) * 100) : 0;
 
     let h = '<div class="stack">';
+    const lb = S.settings.lastBackup;
+    if (S.canWrite && S.sessions.size > 0 && (!lb || lb < addDays(todayISO(), -30))) {
+      h += '<div class="info" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-weight:400"><span style="flex:1;min-width:200px">' + (lb ? "הגיבוי האחרון נעשה ב-" + fmtDate(lb) + ". כדאי לשמור גיבוי חדש פעם בחודש." : "עדיין לא נשמר גיבוי של הנתונים. מומלץ לשמור גיבוי פעם בחודש.") + '</span><button type="button" class="btn small" id="go-backup">לגיבוי</button></div>';
+    }
 
     // hero
     h += '<section class="card hero"><div class="hero-main">' +
@@ -624,9 +682,9 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     else {
       h += '<div class="tbl debts">';
       debts.forEach((d) => {
-        h += '<div class="tr"><div><button type="button" class="link" data-open-patient="' + esc(d.pid) + '">' + esc(patientName(d.pid)) + '</button><div class="sub">' + plural(d.count, "פגישה אחת", "פגישות") + " · הראשונה מ-" + fullDate(d.oldest) + "</div></div>" +
+        h += '<div class="tr"><div><button type="button" class="link" data-open-patient="' + esc(d.pid) + '">' + esc(patientName(d.pid)) + '</button><div class="sub">' + plural(d.count, "פגישה אחת", "פגישות") + " · הראשונה מ-" + fullDate(d.oldest) + (S.patients.get(d.pid) && S.patients.get(d.pid).lastReminder ? " · תזכורת הועתקה " + fmtDate(S.patients.get(d.pid).lastReminder) : "") + "</div></div>" +
           '<span class="amt bad">' + money(d.total) + "</span>" +
-          '<button type="button" class="btn small write-only" data-pay-patient="' + esc(d.pid) + '">רישום תשלום</button></div>';
+          '<div class="btns write-only"><button type="button" class="btn small" data-remind="' + esc(d.pid) + '">תזכורת</button><button type="button" class="btn small" data-pay-patient="' + esc(d.pid) + '">רישום תשלום</button></div></div>';
       });
       h += '</div><div class="debt-total"><span>סה״כ</span><span class="amt bad">' + money(debtTotal) + "</span></div>";
     }
@@ -807,7 +865,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
 
   function evChip(s) {
     const st = payState(s);
-    return '<span class="ev ' + st.cls + '" data-edit="' + esc(s.id) + '" title="' + esc(patientName(s.patientId)) + " · " + st.label + '">' + (s.time ? '<span class="et">' + s.time + "</span>" : "") + esc(patientName(s.patientId)) + "</span>";
+    return '<span class="ev ' + st.cls + '" data-ev="' + esc(s.id) + '" tabindex="0" role="button" title="' + esc(patientName(s.patientId)) + " · " + st.label + '">' + (s.time ? '<span class="et">' + s.time + "</span>" : "") + esc(patientName(s.patientId)) + "</span>";
   }
 
   function weekHTML(list) {
@@ -828,7 +886,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     if (narrow()) {
       h += '<div class="strip">' + days.map((d, i) => {
         const n = (byDay.get(d) || []).length;
-        return '<button type="button" class="sd' + (d === S.selDay ? " sel" : "") + (d === today ? " today" : "") + (i === 6 ? " sat" : "") + '" data-day="' + d + '"><span>' + WD_SHORT[i] + "</span><b>" + Number(d.slice(8)) + "</b><small>" + heb(d).day + "</small>" + (n ? '<i class="num">' + n + "</i>" : "") + "</button>";
+        return '<button type="button" class="sd' + (d === S.selDay ? " sel" : "") + (d === today ? " today" : "") + (isRest(d) ? " sat" : "") + '" data-day="' + d + '"><span>' + WD_SHORT[i] + "</span><b>" + Number(d.slice(8)) + "</b><small>" + heb(d).day + "</small>" + (n ? '<i class="num">' + n + "</i>" : "") + "</button>";
       }).join("") + "</div>";
     }
 
@@ -837,10 +895,10 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     // header
     h += '<div class="wk-corner"></div>' + showDays.map((d) => {
       const i = dow(d), hb = heb(d);
-      return '<div class="wh' + (d === today ? " today" : "") + (d === S.selDay ? " sel" : "") + (i === 6 ? " sat" : "") + '" data-day="' + d + '" tabindex="0"><span class="wn">' + WD_NAME[i] + '</span><span class="gd">' + fullDate(d, true) + '</span><span class="hd">' + hebFull(d) + "</span></div>";
+      return '<div class="wh' + (d === today ? " today" : "") + (d === S.selDay ? " sel" : "") + (isRest(d) ? " sat" : "") + '" data-day="' + d + '" tabindex="0"><span class="wn">' + WD_NAME[i] + '</span><span class="gd">' + fullDate(d, true) + '</span><span class="hd">' + hebFull(d) + "</span>" + holChips(d) + "</div>";
     }).join("");
     if (untimed) {
-      h += '<div class="wk-allday-l">ללא שעה</div>' + showDays.map((d) => '<div class="wk-allday' + (dow(d) === 6 ? " sat" : "") + '">' + (byDay.get(d) || []).filter((s) => timeOf(s) == null).map(evChip).join("") + "</div>").join("");
+      h += '<div class="wk-allday-l">ללא שעה</div>' + showDays.map((d) => '<div class="wk-allday' + (isRest(d) ? " sat" : "") + '">' + (byDay.get(d) || []).filter((s) => timeOf(s) == null).map(evChip).join("") + "</div>").join("");
     }
     // body
     const hours = endH - startH;
@@ -849,19 +907,19 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     h += "</div>";
     const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
     showDays.forEach((d) => {
-      h += '<div class="wk-col' + (dow(d) === 6 ? " sat" : "") + (d === today ? " today" : "") + '" style="--hours:' + hours + '">';
+      h += '<div class="wk-col' + (isRest(d) ? " sat" : "") + (d === today ? " today" : "") + '" data-col="' + d + '" data-start="' + startH + '" data-hours="' + hours + '" style="--hours:' + hours + '">';
       for (let k = startH; k < endH; k++) h += '<div class="slot" data-slot="' + d + "|" + pad(k) + ':00"></div><div class="slot half" data-slot="' + d + "|" + pad(k) + ':30"></div>';
       const timed = (byDay.get(d) || []).filter((s) => timeOf(s) != null);
       layoutDay(timed).forEach((o) => {
         const st = payState(o.s);
-        h += '<div class="we ' + st.cls + '" data-edit="' + esc(o.s.id) + '" title="' + esc(patientName(o.s.patientId)) + " · " + fmtT(o.st) + "–" + fmtT(o.en) + " · " + st.label + '" style="top:calc(' + ((o.st - startH * 60) / 60) + " * var(--hh) + 1px);height:calc(" + (Math.max(o.en - o.st, 25) / 60) + " * var(--hh) - 3px);inset-inline-start:calc(" + o.lane + " * 100% / " + o.lanes + " + 2px);width:calc(100% / " + o.lanes + ' - 4px)">' +
+        h += '<div class="we ' + st.cls + '" data-ev="' + esc(o.s.id) + '" tabindex="0" role="button" title="' + esc(patientName(o.s.patientId)) + " · " + fmtT(o.st) + "–" + fmtT(o.en) + " · " + st.label + '" style="top:calc(' + ((o.st - startH * 60) / 60) + " * var(--hh) + 1px);height:calc(" + (Math.max(o.en - o.st, 25) / 60) + " * var(--hh) - 3px);inset-inline-start:calc(" + o.lane + " * 100% / " + o.lanes + " + 2px);width:calc(100% / " + o.lanes + ' - 4px)">' +
           '<span class="wt"><bdi dir="ltr">' + fmtT(o.st) + (o.lanes > 1 ? "" : "–" + fmtT(o.en)) + '</bdi></span><b>' + (o.s.seriesId ? "↻ " : "") + esc(patientName(o.s.patientId)) + '</b><span class="ws">' + st.label + "</span></div>";
       });
       if (d === today && nowMin >= startH * 60 && nowMin <= endH * 60) h += '<div class="now" style="top:calc(' + ((nowMin - startH * 60) / 60) + ' * var(--hh))"></div>';
       h += "</div>";
     });
     h += "</div></div>";
-    h += '<p class="note write-only">לחיצה על משבצת ריקה פותחת פגישה חדשה בשעה הזו. לחיצה על פגישה פותחת אותה לעריכה.</p>';
+    h += '<p class="note write-only">לחיצה על משבצת ריקה פותחת פגישה חדשה בשעה הזו. לחיצה על פגישה מציגה את פרטיה ומאפשרת לסמן תשלום. במחשב אפשר לגרור פגישה ליום או לשעה אחרים.</p>';
     h += dayPanelHTML(byDay);
     return h;
   }
@@ -881,9 +939,9 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       const iso = S.month + "-" + pad(d);
       const evs = byDay.get(iso) || [];
       const hb = heb(iso);
-      const cls = "day" + (iso === today ? " today" : "") + (iso === S.selDay ? " sel" : "") + (dow(iso) === 6 ? " sat" : "");
+      const cls = "day" + (iso === today ? " today" : "") + (iso === S.selDay ? " sel" : "") + (isRest(iso) ? " sat" : "");
       h += '<div class="' + cls + '" role="gridcell" tabindex="0" data-day="' + iso + '" aria-label="' + d + " ב" + esc(monthName(S.month, { month: "long" })) + ", " + hb.day + " ב" + esc(hb.month) + (evs.length ? ", " + plural(evs.length, "פגישה אחת", "פגישות") : "") + '">' +
-        '<div class="dtop"><span class="dn">' + d + '</span><span class="hdn' + (hb.dayNum === 1 ? " rc" : "") + '">' + hb.day + (hb.dayNum === 1 || d === 1 ? " " + esc(hb.month) : "") + "</span></div>";
+        '<div class="dtop"><span class="dn">' + d + '</span><span class="hdn' + (hb.dayNum === 1 ? " rc" : "") + '">' + hb.day + (hb.dayNum === 1 || d === 1 ? " " + esc(hb.month) : "") + "</span></div>" + holLine(iso);
       evs.slice(0, 4).forEach((s) => { h += evChip(s); });
       if (evs.length > 4) h += '<span class="more">+' + (evs.length - 4) + " נוספות</span>";
       if (evs.length) h += '<span class="dots">' + evs.map((s) => '<i class="' + payState(s).cls + '"></i>').join("") + "</span>";
@@ -900,7 +958,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
   function dayPanelHTML(byDay) {
     const evs = byDay.get(S.selDay) || [];
     const hb = heb(S.selDay);
-    let h = '<div class="daypanel"><div class="panel-h"><h3>יום ' + WD_NAME[dow(S.selDay)] + ", " + fmtDate(S.selDay) + ' <span class="sub">· ' + hb.day + " ב" + esc(hb.month) + " " + hb.year + "</span></h3>" +
+    let h = '<div class="daypanel"><div class="panel-h"><h3>יום ' + WD_NAME[dow(S.selDay)] + ", " + fmtDate(S.selDay) +  ' <span class="sub">· ' + hb.day + " ב" + esc(hb.month) + " " + hb.year + (holidays(S.selDay).length ? " · " + holidays(S.selDay).map((x) => x.name).join(", ") : "") + "</span></h3>" +
       '<button type="button" class="btn small write-only" data-new-day="' + S.selDay + '">' + icon("i-plus") + "פגישה ביום הזה</button></div>";
     h += evs.length ? '<div class="tbl sess">' + evs.map((s) => sessionRow(s)).join("") + "</div>" : '<p class="note">אין פגישות ביום הזה.</p>';
     return h + "</div>";
@@ -987,6 +1045,15 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     }
     h += "</div></section></div>";
 
+    h += '<div class="cols"><section class="card"><div class="card-h"><h2>נוסח תזכורת תשלום</h2></div><div class="card-b form">' +
+      '<div class="field"><label for="set-remind">ההודעה שמועתקת בכפתור „תזכורת”</label><textarea id="set-remind" rows="7">' + esc(S.settings.remindText || DEFAULT_REMIND) + "</textarea></div>" +
+      '<p class="note">אפשר להשתמש ב: {שם} (שם פרטי), {שם מלא}, {סכום}, {תאריכים}, {קליניקה}.</p>' +
+      '<div class="toolbar write-only"><button type="button" class="btn primary" id="save-remind">שמירת הנוסח</button><button type="button" class="btn" id="reset-remind">חזרה לנוסח המקורי</button></div></div></section>';
+    h += '<section class="card"><div class="card-h"><h2>גיבוי ושחזור</h2></div><div class="card-b form">' +
+      '<p class="note">' + (S.settings.lastBackup ? "הגיבוי האחרון נשמר ב-" + fmtDate(S.settings.lastBackup) + "." : "עדיין לא נשמר גיבוי.") + " הגיבוי הוא קובץ אחד עם כל המטופלות, הפגישות, התשלומים וההגדרות. כדאי לשמור אותו פעם בחודש במחשב או בדיסק און קי.</p>" +
+      '<div class="toolbar">' + (S.downloads ? '<button type="button" class="btn primary" id="backup-dl">הורדת גיבוי מלא</button>' : '<span class="note">הורדת קבצים לא זמינה בתצוגה הזו.</span>') +
+      '<label class="btn restore-pick write-only" for="restore-file">שחזור מקובץ גיבוי…<input id="restore-file" type="file" accept=".json,application/json"></label></div>' +
+      '<div id="restore-box" hidden></div></div></section></div>';
     h += '<section class="card"><div class="card-h"><h2>פרטיות</h2></div><div class="card-b form"><p class="note">הנתונים נשמרים בענן, בדף הפרטי שלך ב-claude.ai, ומסתנכרנים בין הטלפון למחשב. רק בעלת הדף ומי שהוזמנה כעורכת יכולות לראות ולשנות אותם.</p>';
     if (ex > 0) h += '<div class="toolbar write-only"><span class="note grow">יש כאן ' + ex + ' רשומות דוגמה (מסומנות „דוגמה”).</span><button type="button" class="btn danger" id="clear-examples">מחיקת נתוני הדוגמה</button></div>';
     h += "</div></section></div>";
@@ -1022,6 +1089,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
 
   function openSession(sid, presetPatient, presetDate, presetTime, opts) {
     const existing = sid ? S.sessions.get(sid) : null;
+    const laterSeries = existing && existing.seriesId ? Array.from(S.sessions.values()).filter((x) => x.seriesId === existing.seriesId && x.date > existing.date && x.id !== existing.id) : [];
     const s = existing ? plain(existing) : { patientId: presetPatient || "", date: presetDate || (S.month === ymOf(todayISO()) ? todayISO() : S.month + "-01"), price: Number(S.settings.defaultPrice) || 400, time: presetTime || "", duration: Number(S.settings.sessionLength) || 50, status: "held", note: "", payments: [] };
     const payments = (s.payments || []).slice();
     const ro = !S.canWrite;
@@ -1033,10 +1101,13 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       '<div class="field"><label for="f-time">שעה</label><input id="f-time" type="time" step="300" value="' + esc(s.time || "") + '"></div>' +
       '<div class="field"><label for="f-dur">משך (דקות)</label><input id="f-dur" type="number" min="5" step="5" inputmode="numeric" value="' + esc(s.duration || durOf(s)) + '"></div>' +
       '<div class="field"><label for="f-price">מחיר (₪)</label><input id="f-price" type="number" min="0" step="10" inputmode="numeric" value="' + esc(s.price) + '"></div></div>' +
-      (existing ? (existing.seriesId ? '<p class="info">↻ הפגישה הזו חלק מסדרת פגישות קבועות.</p>' : "") :
+      '<div id="f-warn" class="warnbox" hidden></div>' +
+      (existing ? (existing.seriesId ? '<div class="section"><span class="rep">↻ פגישה קבועה</span>' + (laterSeries.length && !ro ? '<div class="field"><span class="lab">לשמור את השינויים (שעה, משך, מחיר, מטופלת ויום בשבוע):</span>' + segHTML("f-scope", [{ v: "one", l: "רק בפגישה הזו" }, { v: "all", l: "גם ב-" + laterSeries.length + " הפגישות הבאות" }], "one") + "</div>" : '<p class="note">זו הפגישה האחרונה בסדרה.</p>') + "</div>" : "") :
         '<div class="section"><label class="check"><input type="checkbox" id="f-rep"' + (opts && opts.repeat ? " checked" : "") + '> <span>פגישה קבועה (חוזרת)</span></label>' +
         '<div class="fr" id="f-rep-opts"' + (opts && opts.repeat ? "" : " hidden") + '><div class="field"><label for="f-freq">תדירות</label><select id="f-freq"><option value="7">כל שבוע</option><option value="14">כל שבועיים</option></select></div>' +
-        '<div class="field"><label for="f-until">עד תאריך</label><input id="f-until" type="date"></div></div><p class="note" id="f-rep-sum"' + (opts && opts.repeat ? "" : " hidden") + "></p></div>") +
+        '<div class="field"><label for="f-until">עד תאריך</label><input id="f-until" type="date"></div></div>' +
+        '<label class="check" id="f-skip-wrap"' + (opts && opts.repeat ? "" : " hidden") + '><input type="checkbox" id="f-skip" checked> <span id="f-skip-l">לדלג על שבתות וימים טובים</span></label>' +
+        '<p class="note" id="f-rep-sum"' + (opts && opts.repeat ? "" : " hidden") + "></p></div>") +
       '<div class="field"><span class="lab">סטטוס</span>' + segHTML("f-status", [{ v: "held", l: STATUS.held }, { v: "late", l: STATUS.late }, { v: "free", l: STATUS.free }], s.status) + "</div>" +
       '<div class="section"><h3>תשלום</h3><div class="paylist" id="f-paylist"></div>' +
       '<div id="f-newpay" class="form"><div class="field"><span class="lab" id="f-newpay-lab">איך שולם?</span>' + segHTML("f-method", methodItems(true), "none") + "</div>" +
@@ -1047,7 +1118,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       '<div id="f-err" class="banner" hidden></div>' +
       "</div>" +
       '<div class="dlg-f">' + (existing && !ro ? '<button type="button" class="btn danger" id="f-del">מחיקת הפגישה</button>' : "") +
-      '<div class="end"><button type="button" class="btn" data-close>ביטול</button>' + (ro ? "" : '<button type="button" class="btn primary" id="f-save">שמירה</button>') + "</div></div>";
+      '<div class="end"><button type="button" class="btn" data-close>ביטול</button>' + (ro ? "" : (existing ? "" : '<button type="button" class="btn" id="f-save-next">שמירה והוספת עוד</button>') + '<button type="button" class="btn primary" id="f-save">שמירה</button>') + "</div></div>";
 
     openDlg(html, () => {
       const curCharge = () => (segVal("f-status") === "free" ? 0 : Number($("#f-price").value) || 0);
@@ -1072,34 +1143,67 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
         const out = []; for (let d = d0; d <= until && out.length < 60; d = addDays(d, step)) out.push(d);
         return out;
       };
+      const repFinal = () => { const ds = repDates(); return $("#f-skip") && $("#f-skip").checked ? ds.filter((d) => !isRest(d)) : ds; };
+      const checkWarn = () => {
+        const w = $("#f-warn"), msgs = [];
+        const d0 = $("#f-date").value, t0 = timeOf({ time: $("#f-time").value }), dur = Number($("#f-dur").value) || durOf({});
+        const repOn = $("#f-rep") && $("#f-rep").checked;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d0)) {
+          if (!repOn) {
+            if (isRest(d0)) msgs.push("שימי לב: " + fmtDate(d0) + " הוא " + restName(d0) + ".");
+            else { const hs = holidays(d0).filter((x) => x.kind !== "rc"); if (hs.length) msgs.push("באותו יום: " + hs.map((x) => x.name).join(", ") + "."); }
+            if (t0 != null) { const ov = overlaps(d0, t0, dur, sid ? [sid] : []); if (ov.length) msgs.push("באותה שעה כבר קבועה פגישה: " + ov.map((x) => patientName(x.patientId) + " " + x.time).join(", ") + "."); }
+          } else {
+            const ds = repFinal();
+            if (t0 != null) { const c = ds.filter((d) => overlaps(d, t0, dur, []).length).length; if (c) msgs.push("ב-" + plural(c, "תאריך אחד", "תאריכים") + " מהסדרה כבר יש פגישה באותה שעה."); }
+            const fasts = ds.filter((d) => holidays(d).some((x) => x.kind === "chol" || x.kind === "fast" || x.kind === "erev"));
+            if (fasts.length) msgs.push("תאריכים שנופלים בחול המועד, בערב חג או בצום: " + fasts.map(fmtDate).join(", ") + ".");
+          }
+        }
+        w.innerHTML = msgs.map((m) => "<span>" + esc(m) + "</span>").join("");
+        w.hidden = !msgs.length;
+      };
+      checkWarn();
+      ["f-date", "f-time", "f-dur"].forEach((id) => $("#" + id).addEventListener("input", checkWarn));
       const repSum = () => {
+        checkWarn();
         if (!$("#f-rep") || !$("#f-rep").checked) return;
-        const ds = repDates(), tm = $("#f-time").value;
-        $("#f-rep-sum").textContent = ds.length ? "ייווצרו " + ds.length + " פגישות: " + ($("#f-freq").value === "14" ? "כל שבועיים" : "כל שבוע") + " ב" + weekday(ds[0]) + (tm ? " בשעה " + tm : "") + ", מ-" + fullDate(ds[0]) + " עד " + fullDate(ds[ds.length - 1]) + "." : "בחרי תאריך סיום מאוחר מתאריך הפגישה.";
+        const all = repDates(), ds = repFinal(), tm = $("#f-time").value;
+        const skipped = all.filter((d) => isRest(d));
+        $("#f-skip-l").textContent = "לדלג על שבתות וימים טובים" + (skipped.length ? " (" + skipped.map((d) => restName(d) + " " + fmtDate(d)).join(", ") + ")" : "");
+        $("#f-rep-sum").textContent = ds.length ? "ייווצרו " + ds.length + " פגישות: " + ($("#f-freq").value === "14" ? "כל שבועיים" : "כל שבוע") + " ב" + weekday(ds[0]) + (tm ? " בשעה " + tm : "") + ", מ-" + fullDate(ds[0]) + " עד " + fullDate(ds[ds.length - 1]) + "." : all.length ? "כל התאריכים בסדרה נופלים בשבת או ביום טוב. בחרי יום אחר בשבוע." : "בחרי תאריך סיום מאוחר מתאריך הפגישה.";
       };
       if ($("#f-rep")) {
         const setUntil = () => { const v = $("#f-date").value; if (/^\d{4}-\d{2}-\d{2}$/.test(v) && !$("#f-until").dataset.touched) $("#f-until").value = addDays(v, 7 * 12); };
         setUntil();
-        $("#f-rep").addEventListener("change", (e) => { $("#f-rep-opts").hidden = !e.target.checked; $("#f-rep-sum").hidden = !e.target.checked; repSum(); });
+        $("#f-rep").addEventListener("change", (e) => { $("#f-rep-opts").hidden = !e.target.checked; $("#f-rep-sum").hidden = !e.target.checked; $("#f-skip-wrap").hidden = !e.target.checked; repSum(); });
+        $("#f-skip").addEventListener("change", repSum);
         $("#f-until").addEventListener("input", (e) => { e.target.dataset.touched = "1"; repSum(); });
         $("#f-freq").addEventListener("change", repSum);
         $("#f-date").addEventListener("input", () => { setUntil(); repSum(); });
         $("#f-time").addEventListener("input", repSum);
         repSum();
       }
+      if ($("#f-scope")) wireSeg("f-scope");
       $("#f-patient").addEventListener("change", (e) => { $("#f-newp-wrap").hidden = e.target.value !== "__new"; if (e.target.value === "__new") $("#f-newp").focus(); });
       if (ro) { $$("input,select,textarea", body).forEach((x) => (x.disabled = true)); $("#f-newpay").hidden = true; return; }
       const del = $("#f-del");
       if (del) del.addEventListener("click", () => {
         const later = existing.seriesId ? Array.from(S.sessions.values()).filter((x) => x.seriesId === existing.seriesId && x.date > existing.date && paidOf(x) === 0) : [];
         del.outerHTML = '<div class="confirm">למחוק את הפגישה לצמיתות? <button type="button" class="btn small danger" id="f-del2">רק את הפגישה הזו</button>' + (later.length ? '<button type="button" class="btn small danger" id="f-del3">גם את ' + later.length + " הפגישות הבאות בסדרה</button>" : "") + "</div>";
-        $("#f-del2").addEventListener("click", () => { delDoc("sessions", sid).then(() => { closeDlg(); toast("הפגישה נמחקה"); }, () => {}); });
+        const copy = plain(existing);
+        $("#f-del2").addEventListener("click", () => { delDoc("sessions", sid).then(() => { closeDlg(); toast("הפגישה נמחקה", () => setDoc("sessions", sid, copy)); }, () => {}); });
         const d3 = $("#f-del3");
         if (d3) d3.addEventListener("click", async () => {
-          try { await delDoc("sessions", sid); for (const x of later) await delDoc("sessions", x.id); closeDlg(); toast("נמחקו " + (later.length + 1) + " פגישות"); } catch (e) { /* reported */ }
+          const copies = [[sid, copy]].concat(later.map((x) => [x.id, plain(x)]));
+          try {
+            await delDoc("sessions", sid); for (const x of later) await delDoc("sessions", x.id);
+            closeDlg();
+            toast("נמחקו " + (later.length + 1) + " פגישות", async () => { for (const [id, c] of copies) await setDoc("sessions", id, c); });
+          } catch (e) { /* reported */ }
         });
       });
-      $("#f-save").addEventListener("click", async () => {
+      const doSave = async (next) => {
         const err = $("#f-err"); err.hidden = true;
         const fail = (m) => { err.textContent = m; err.hidden = false; };
         let pid = $("#f-patient").value;
@@ -1123,7 +1227,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
             pid = npid;
           }
           const data = Object.assign({}, existing ? plain(existing) : { createdAt: todayISO() }, { patientId: pid, date, price, status: segVal("f-status"), time: $("#f-time").value || "", duration: Number($("#f-dur").value) || durOf({}), note: $("#f-note").value.trim(), payments: finalPays });
-          const rep = !existing && $("#f-rep") && $("#f-rep").checked ? repDates() : [];
+          const rep = !existing && $("#f-rep") && $("#f-rep").checked ? repFinal() : [];
           if (rep.length > 1) {
             const seriesId = newId("sessions");
             for (let i = 0; i < rep.length; i++) {
@@ -1133,12 +1237,23 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
             toast("נוספו " + rep.length + " פגישות קבועות");
           } else {
             await setDoc("sessions", sid || newId("sessions"), data);
+            let more = 0;
+            if (existing && laterSeries.length && segVal("f-scope") === "all") {
+              const delta = Math.round((Date.UTC(...date.split("-").map((x, i) => Number(x) - (i === 1 ? 1 : 0))) - Date.UTC(...existing.date.split("-").map((x, i) => Number(x) - (i === 1 ? 1 : 0)))) / 864e5);
+              for (const x of laterSeries) {
+                await updDoc("sessions", x.id, { patientId: pid, price, time: data.time, duration: data.duration, date: addDays(x.date, delta) });
+                more++;
+              }
+            }
             closeDlg();
-            toast(existing ? "הפגישה עודכנה" : "הפגישה נוספה");
+            toast(existing ? (more ? "עודכנו הפגישה ועוד " + more + " פגישות בסדרה" : "הפגישה עודכנה") : "הפגישה נוספה");
           }
           if (!existing) { S.selDay = date; S.month = ymOf(date); if (date < S.weekStart || date > addDays(S.weekStart, 6)) S.weekStart = sundayOf(date); render(); }
+          if (next) { const t0 = timeOf({ time: data.time }); openSession(null, "", date, t0 != null ? fmtT(t0 + data.duration) : ""); }
         } catch (e) { $("#f-save").disabled = false; }
-      });
+      };
+      $("#f-save").addEventListener("click", () => doSave(false));
+      const sn = $("#f-save-next"); if (sn) sn.addEventListener("click", () => doSave(true));
     });
   }
 
@@ -1159,7 +1274,8 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
       const del = $("#p-del");
       if (del) del.addEventListener("click", () => {
         del.outerHTML = '<div class="confirm">למחוק את המטופלת? <button type="button" class="btn small danger" id="p-del2">כן, למחוק</button></div>';
-        $("#p-del2").addEventListener("click", () => delDoc("patients", pid).then(() => { closeDlg(); toast("המטופלת נמחקה"); }, () => {}));
+        const pcopy = Object.assign({}, p); delete pcopy.id;
+        $("#p-del2").addEventListener("click", () => delDoc("patients", pid).then(() => { closeDlg(); toast("המטופלת נמחקה", () => setDoc("patients", pid, pcopy)); }, () => {}));
       });
       $("#p-save").addEventListener("click", async () => {
         const name = $("#p-name").value.trim();
@@ -1182,10 +1298,11 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const html = dlgHead(esc(p.name)) +
       '<div class="mini"><div class="' + (sm.total > 0 ? "bad" : "good") + '"><span class="lbl">יתרה לתשלום</span><b>' + money(sm.total) + '</b></div><div><span class="lbl">שולם עד היום</span><b>' + money(paidTotal) + '</b></div><div><span class="lbl">פגישות</span><b>' + sm.count + "</b></div></div>" +
       (p.phone || p.note ? '<p class="note">' + (p.phone ? 'טלפון: <span dir="ltr" class="num" style="user-select:all">' + esc(p.phone) + "</span>" : "") + (p.phone && p.note ? " · " : "") + esc(p.note || "") + "</p>" : "") +
-      '<div class="toolbar write-only"><button type="button" class="btn primary" id="pp-new">' + icon("i-plus") + "פגישה</button>" + '<button type="button" class="btn" id="pp-rep">↻ פגישה קבועה</button>' + (sm.total > 0 ? '<button type="button" class="btn" id="pp-pay">רישום תשלום</button>' : "") + '<button type="button" class="btn" id="pp-cal">הצגה בלוח הפגישות</button><span class="grow"></span><button type="button" class="btn" id="pp-edit">עריכת פרטים</button></div>' +
+      '<div class="toolbar write-only"><button type="button" class="btn primary" id="pp-new">' + icon("i-plus") + "פגישה</button>" + '<button type="button" class="btn" id="pp-rep">↻ פגישה קבועה</button>' + (sm.total > 0 ? '<button type="button" class="btn" id="pp-pay">רישום תשלום</button><button type="button" class="btn" id="pp-remind">תזכורת תשלום</button>' : "") + '<button type="button" class="btn" id="pp-cal">הצגה בלוח הפגישות</button><span class="grow"></span><button type="button" class="btn" id="pp-edit">עריכת פרטים</button></div>' +
       '<div class="tbl sess" id="pp-rows">' + (list.length ? list.map((s) => sessionRow(s, { noName: true })).join("") : '<div class="empty">עדיין אין פגישות למטופלת הזו.</div>') + "</div>";
     openDlg(html, () => {
       const n = $("#pp-new"); if (n) n.addEventListener("click", () => openSession(null, pid));
+      const prm = $("#pp-remind"); if (prm) prm.addEventListener("click", () => openReminder(pid));
       const rp = $("#pp-rep"); if (rp) rp.addEventListener("click", () => openSession(null, pid, null, null, { repeat: true }));
       const pay = $("#pp-pay"); if (pay) pay.addEventListener("click", () => openPayPatient(pid));
       const ed = $("#pp-edit"); if (ed) ed.addEventListener("click", () => openPatientEdit(pid));
@@ -1228,6 +1345,288 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     });
   }
 
+  // ---------- Jewish holidays ----------
+  let hebEnFmt = null;
+  try { hebEnFmt = new Intl.DateTimeFormat("en-u-ca-hebrew", { day: "numeric", month: "long" }); } catch (e) { /* no Hebrew calendar */ }
+  const hmCache = new Map();
+  function hm(iso) {
+    let r = hmCache.get(iso); if (r) return r;
+    r = { m: "", d: 0 };
+    if (hebEnFmt) {
+      const [y, mo, d] = iso.split("-").map(Number);
+      const parts = hebEnFmt.formatToParts(new Date(y, mo - 1, d, 12));
+      r = { m: (parts.find((p) => p.type === "month") || {}).value || "", d: Number((parts.find((p) => p.type === "day") || {}).value) || 0 };
+    }
+    hmCache.set(iso, r);
+    return r;
+  }
+  const holCache = new Map();
+  // kind: yt = יום טוב (no sessions), chol, fast, minor, rc = ראש חודש, erev
+  function holidays(iso) {
+    let r = holCache.get(iso); if (r) return r;
+    r = [];
+    const { m, d } = hm(iso), w = dow(iso);
+    const add = (name, kind) => r.push({ name, kind });
+    if (m) {
+      if (m === "Elul" && d === 29) add("ערב ראש השנה", "erev");
+      if (m === "Tishri") {
+        if (d === 1 || d === 2) add("ראש השנה", "yt");
+        if ((d === 3 && w !== 6) || (d === 4 && w === 0)) add("צום גדליה", "fast");
+        if (d === 9) add("ערב יום כיפור", "erev");
+        if (d === 10) add("יום כיפור", "yt");
+        if (d === 14) add("ערב סוכות", "erev");
+        if (d === 15) add("סוכות", "yt");
+        if (d >= 16 && d <= 20) add("חול המועד סוכות", "chol");
+        if (d === 21) add("הושענא רבה", "chol");
+        if (d === 22) add("שמחת תורה", "yt");
+      }
+      if (m === "Tevet" && d === 10) add("עשרה בטבת", "fast");
+      if (m === "Shevat" && d === 15) add("ט״ו בשבט", "minor");
+      if (m === "Adar" || m === "Adar II") {
+        if ((d === 13 && w !== 6) || (d === 11 && w === 4)) add("תענית אסתר", "fast");
+        if (d === 14) add("פורים", "minor");
+        if (d === 15) add("שושן פורים", "minor");
+      }
+      if (m === "Nisan") {
+        if (d === 14) add("ערב פסח", "erev");
+        if (d === 15) add("פסח", "yt");
+        if (d >= 16 && d <= 20) add("חול המועד פסח", "chol");
+        if (d === 21) add("שביעי של פסח", "yt");
+      }
+      if (m === "Iyar" && d === 18) add("ל״ג בעומר", "minor");
+      if (m === "Sivan") { if (d === 5) add("ערב שבועות", "erev"); if (d === 6) add("שבועות", "yt"); }
+      if (m === "Tamuz" && ((d === 17 && w !== 6) || (d === 18 && w === 0))) add("י״ז בתמוז", "fast");
+      if (m === "Av" && ((d === 9 && w !== 6) || (d === 10 && w === 0))) add("תשעה באב", "fast");
+      if ((d === 1 && m !== "Tishri") || d === 30) add("ראש חודש", "rc");
+      for (let k = 0; k < 8; k++) { const x = hm(addDays(iso, -k)); if (x.m === "Kislev" && x.d === 25) { add("חנוכה · נר " + (k + 1), "minor"); break; } }
+    }
+    holCache.set(iso, r);
+    return r;
+  }
+  const isRest = (iso) => dow(iso) === 6 || holidays(iso).some((h) => h.kind === "yt");
+  const restName = (iso) => { const yt = holidays(iso).find((h) => h.kind === "yt"); return yt ? yt.name : dow(iso) === 6 ? "שבת" : ""; };
+  const holChips = (iso) => { const hs = holidays(iso); return hs.length ? '<span class="hols">' + hs.map((h) => '<span class="hol ' + h.kind + '">' + h.name + "</span>").join("") + "</span>" : ""; };
+  const holLine = (iso) => { const hs = holidays(iso); return hs.length ? '<span class="holm ' + hs[0].kind + '">' + hs.map((h) => h.name).join(" · ") + "</span>" : ""; };
+
+  function overlaps(date, startMin, dur, excludeIds) {
+    const ex = new Set([].concat(excludeIds || []));
+    return Array.from(S.sessions.values()).filter((x) => {
+      if (x.date !== date || ex.has(x.id) || x.status === "free") return false;
+      const t = timeOf(x); if (t == null) return false;
+      return t < startMin + dur && startMin < t + durOf(x);
+    });
+  }
+
+  // ---------- calendar popover ----------
+  const pop = $("#pop");
+  let popFor = "";
+  function closePop() { if (!pop.hidden) { pop.hidden = true; popFor = ""; } }
+  function openPop(id, anchor) {
+    const s = S.sessions.get(id); if (!s) return;
+    const st = payState(s), bal = balOf(s), t = timeOf(s);
+    const hs = holidays(s.date);
+    pop.innerHTML = '<div class="pop-h"><b>' + esc(patientName(s.patientId)) + (s.seriesId ? ' <span class="rep" title="פגישה קבועה">↻</span>' : "") + '</b><button type="button" class="x" data-pop-close aria-label="סגירה">×</button></div>' +
+      '<div class="sub">' + esc(weekday(s.date)) + ", " + fmtDate(s.date) + (t != null ? ' · <bdi dir="ltr">' + fmtT(t) + "–" + fmtT(t + durOf(s)) + "</bdi>" : "") + "</div>" +
+      '<div class="sub" style="color:var(--accent)">' + hebFull(s.date) + (hs.length ? " · " + hs.map((h) => h.name).join(", ") : "") + "</div>" +
+      '<div class="pop-r"><span class="st ' + st.cls + '">' + st.label + (s.status !== "held" ? " · " + STATUS[s.status] : "") + '</span><span class="amt">' + money(charge(s)) + (paidOf(s) > 0 && bal > 0 ? ' <span class="sub" style="color:var(--bad)">נותרו ' + money(bal) + "</span>" : "") + "</span></div>" +
+      (bal > 0 && S.canWrite ? '<div class="pop-pay"><span class="sub">סימון תשלום מלא:</span><div class="pay">' + METHOD_KEYS.map((k) => '<button type="button" class="qp" data-pop-qp="' + esc(s.id) + '" data-m="' + k + '">' + icon(METHODS[k].icon) + mLabel(k, true) + "</button>").join("") + "</div></div>" : "") +
+      (s.note ? '<p class="note">' + esc(s.note) + "</p>" : "") +
+      '<div class="pop-f"><button type="button" class="btn small" data-pop-edit="' + esc(s.id) + '">' + (S.canWrite ? "עריכה מלאה" : "פרטים") + "</button>" +
+      (bal > 0 && !isFuture(s) ? '<button type="button" class="btn small write-only" data-pop-remind="' + esc(s.patientId) + '">תזכורת תשלום</button>' : "") +
+      '<button type="button" class="btn small" data-pop-patient="' + esc(s.patientId) + '">כרטיס מטופלת</button></div>';
+    pop.hidden = false; popFor = id;
+    const r = anchor.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+    if (vw < 560) { pop.classList.add("sheet"); pop.style.left = pop.style.top = ""; }
+    else {
+      pop.classList.remove("sheet");
+      const w = pop.offsetWidth, h = pop.offsetHeight;
+      let left = r.left + r.width / 2 - w / 2; left = Math.max(8, Math.min(left, vw - w - 8));
+      let top = r.bottom + 6; if (top + h > vh - 8) top = Math.max(8, r.top - h - 6);
+      pop.style.left = left + "px"; pop.style.top = top + "px";
+    }
+    const first = pop.querySelector(".qp, .btn"); if (first) first.focus({ preventScroll: true });
+  }
+  pop.addEventListener("click", (e) => {
+    const t = e.target;
+    if (t.closest("[data-pop-close]")) { closePop(); return; }
+    const q = t.closest("[data-pop-qp]"); if (q) { closePop(); quickPay(q.dataset.popQp, q.dataset.m); return; }
+    const ed = t.closest("[data-pop-edit]"); if (ed) { closePop(); openSession(ed.dataset.popEdit); return; }
+    const rm = t.closest("[data-pop-remind]"); if (rm) { closePop(); openReminder(rm.dataset.popRemind); return; }
+    const pt = t.closest("[data-pop-patient]"); if (pt) { closePop(); openPatient(pt.dataset.popPatient); return; }
+  });
+  document.addEventListener("pointerdown", (e) => { if (!pop.hidden && !pop.contains(e.target) && !e.target.closest("[data-ev]")) closePop(); }, true);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closePop(); hideSearch(); } });
+  window.addEventListener("scroll", () => { if (!pop.classList.contains("sheet")) closePop(); }, { passive: true });
+  window.addEventListener("resize", closePop);
+
+  // ---------- drag sessions in the week grid (mouse / pen) ----------
+  let drag = null, suppressClick = false;
+  $("#view").addEventListener("pointerdown", (e) => {
+    const el = e.target.closest(".we[data-ev]");
+    if (!el || e.pointerType === "touch" || e.button !== 0 || !S.canWrite) return;
+    const s = S.sessions.get(el.dataset.ev); const col = el.closest(".wk-col");
+    if (!s || !col) return;
+    const hh = col.getBoundingClientRect().height / Number(col.dataset.hours);
+    drag = { el, s, x: e.clientX, y: e.clientY, on: false, ghost: null, target: null, hh, off: ((e.clientY - el.getBoundingClientRect().top) / hh) * 60 };
+    e.preventDefault();
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    if (!drag.on) {
+      if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) < 6) return;
+      drag.on = true; closePop(); drag.el.classList.add("dragging"); document.body.classList.add("is-dragging");
+    }
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const col = under && under.closest(".wk-col"); if (!col) return;
+    const r = col.getBoundingClientRect(), start = Number(col.dataset.start), dur = durOf(drag.s);
+    let min = start * 60 + ((e.clientY - r.top) / drag.hh) * 60 - drag.off;
+    min = Math.max(0, Math.min(Math.round(min / 15) * 15, 24 * 60 - dur));
+    drag.target = { date: col.dataset.col, min };
+    if (!drag.ghost) { drag.ghost = document.createElement("div"); drag.ghost.className = "we ghost"; }
+    if (drag.ghost.parentNode !== col) col.appendChild(drag.ghost);
+    drag.ghost.style.cssText = "top:calc(" + (min - start * 60) / 60 + " * var(--hh) + 1px);height:calc(" + dur / 60 + " * var(--hh) - 3px);inset-inline-start:2px;width:calc(100% - 4px)";
+    drag.ghost.innerHTML = '<span class="wt"><bdi dir="ltr">' + fmtT(min) + "–" + fmtT(min + dur) + "</bdi></span><b>" + esc(patientName(drag.s.patientId)) + "</b>";
+  });
+  window.addEventListener("pointerup", () => {
+    if (!drag) return;
+    const d = drag; drag = null;
+    document.body.classList.remove("is-dragging");
+    if (!d.on) return;
+    suppressClick = true; setTimeout(() => { suppressClick = false; }, 400);
+    if (d.ghost) d.ghost.remove();
+    d.el.classList.remove("dragging");
+    if (!d.target) return;
+    const nt = fmtT(d.target.min);
+    if (d.target.date === d.s.date && nt === d.s.time) return;
+    const before = { date: d.s.date, time: d.s.time || "" };
+    const ov = overlaps(d.target.date, d.target.min, durOf(d.s), d.s.id);
+    const rest = isRest(d.target.date) ? restName(d.target.date) : "";
+    updDoc("sessions", d.s.id, { date: d.target.date, time: nt }).then(() => {
+      toast(patientName(d.s.patientId) + " הועברה ל" + weekday(d.target.date) + " " + fmtDate(d.target.date) + " בשעה " + nt +
+        (ov.length ? ". שימי לב: חופף לפגישה עם " + ov.map((x) => patientName(x.patientId)).join(", ") : "") + (rest ? ". שימי לב: " + rest : ""),
+        () => updDoc("sessions", d.s.id, before));
+    }, () => {});
+  });
+
+  // ---------- payment reminder ----------
+  const DEFAULT_REMIND = "שלום {שם},\nרציתי להזכיר בעדינות שנותרה יתרה של {סכום} עבור הפגישות בתאריכים {תאריכים}.\nאפשר לשלם באשראי, במזומן או בהעברה בנקאית.\nתודה רבה,\n{קליניקה}";
+  function reminderText(pid) {
+    const p = S.patients.get(pid) || { name: "" };
+    const open = Array.from(S.sessions.values()).filter((s) => s.patientId === pid && !isFuture(s) && balOf(s) > 0).sort(byDateTime);
+    const total = open.reduce((a, s) => a + balOf(s), 0);
+    const tpl = S.settings.remindText || DEFAULT_REMIND;
+    return { total, count: open.length, text: tpl.replace(/\{שם מלא\}/g, p.name).replace(/\{שם\}/g, (p.name || "").split(" ")[0]).replace(/\{סכום\}/g, money(total)).replace(/\{תאריכים\}/g, open.map((s) => fmtDate(s.date)).join(", ")).replace(/\{קליניקה\}/g, S.settings.clinicName || "").trim() };
+  }
+  function openReminder(pid) {
+    const p = S.patients.get(pid); if (!p) return;
+    const r = reminderText(pid);
+    const html = dlgHead("תזכורת תשלום · " + esc(p.name)) + '<div class="form">' +
+      (r.total > 0 ? '<div class="info">יתרה פתוחה: <span class="num">' + money(r.total) + "</span> על " + plural(r.count, "פגישה אחת", "פגישות") + "</div>" : '<div class="info">אין כרגע יתרה פתוחה למטופלת הזו.</div>') +
+      '<div class="field"><label for="r-text">נוסח ההודעה (אפשר לשנות לפני ההעתקה)</label><textarea id="r-text" rows="7">' + esc(r.text) + "</textarea></div>" +
+      (p.phone ? '<p class="note">טלפון: <span dir="ltr" class="num" style="user-select:all">' + esc(p.phone) + "</span></p>" : "") +
+      (p.lastReminder ? '<p class="note">תזכורת קודמת הועתקה ב-' + fmtDate(p.lastReminder) + ".</p>" : "") +
+      '<p class="note">את הנוסח הקבוע אפשר לשנות בלשונית „הגדרות וייצוא”.</p></div>' +
+      '<div class="dlg-f"><div class="end"><button type="button" class="btn" data-close>סגירה</button><button type="button" class="btn primary" id="r-copy">העתקת ההודעה</button></div></div>';
+    openDlg(html, () => {
+      $("#r-copy").addEventListener("click", () => {
+        const ta = $("#r-text"), txt = ta.value;
+        const done = () => {
+          toast("ההודעה הועתקה. אפשר להדביק אותה בהודעה למטופלת.");
+          if (S.canWrite) updDoc("patients", pid, { lastReminder: todayISO() }).catch(() => {});
+        };
+        const fallback = () => { ta.focus(); ta.select(); toast("ההעתקה האוטומטית לא זמינה כאן. הטקסט מסומן, העתיקי אותו ידנית."); };
+        try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
+      });
+    });
+  }
+
+  // ---------- quick search ----------
+  const gs = $("#g-search"), gres = $("#g-res");
+  function hideSearch() { gres.hidden = true; }
+  function searchHits(q) {
+    q = q.trim(); if (!q) return [];
+    return Array.from(S.patients.values()).filter((p) => p.name.includes(q) || (p.phone && p.phone.replace(/\D/g, "").includes(q.replace(/\D/g, "") || "#")))
+      .sort((a, b) => (a.active === b.active ? a.name.localeCompare(b.name, "he") : a.active ? -1 : 1)).slice(0, 8);
+  }
+  function drawSearch() {
+    const hits = searchHits(gs.value);
+    if (!gs.value.trim()) { hideSearch(); return; }
+    gres.innerHTML = hits.length ? hits.map((p, i) => { const sm = patientSummary(p.id); return '<button type="button" class="gr' + (i === 0 ? " first" : "") + '" data-g="' + esc(p.id) + '"><b>' + esc(p.name) + "</b>" + (p.active ? "" : ' <span class="sub">· בארכיון</span>') + '<span class="sub">' + plural(sm.count, "פגישה אחת", "פגישות") + (sm.total > 0 ? ' · <span style="color:var(--bad)">יתרה ' + money(sm.total) + "</span>" : "") + "</span></button>"; }).join("") : '<div class="gr none">לא נמצאה מטופלת בשם הזה.</div>';
+    gres.hidden = false;
+  }
+  gs.addEventListener("input", drawSearch);
+  gs.addEventListener("focus", drawSearch);
+  gs.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { const f = gres.querySelector("[data-g]"); if (f) { e.preventDefault(); gs.value = ""; hideSearch(); openPatient(f.dataset.g); } }
+    if (e.key === "ArrowDown") { const f = gres.querySelector("[data-g]"); if (f) { e.preventDefault(); f.focus(); } }
+  });
+  gres.addEventListener("keydown", (e) => {
+    const b = e.target.closest("[data-g]"); if (!b) return;
+    if (e.key === "ArrowDown" && b.nextElementSibling) { e.preventDefault(); b.nextElementSibling.focus(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); (b.previousElementSibling || gs).focus(); }
+  });
+  gres.addEventListener("click", (e) => { const b = e.target.closest("[data-g]"); if (!b) return; gs.value = ""; hideSearch(); openPatient(b.dataset.g); });
+  document.addEventListener("pointerdown", (e) => { if (!e.target.closest(".gsearch")) hideSearch(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || "") && !dlg.open) { e.preventDefault(); gs.focus(); }
+  });
+
+  // ---------- settings save, backup and restore ----------
+  function saveSettings(patch) {
+    const next = Object.assign({}, S.settings, patch);
+    return queueWrite("settings/main", () => S.db.doc("settings/main").set(next)).catch(writeErr);
+  }
+  async function doBackup() {
+    const data = {
+      app: "gvia", version: 1, exportedAt: new Date().toISOString(),
+      settings: Object.assign({}, S.settings),
+      patients: Array.from(S.patients.values()).map((p) => Object.assign({}, p)),
+      sessions: Array.from(S.sessions.values()).map((s) => Object.assign({ id: s.id }, plain(s))),
+    };
+    try {
+      await S.downloads.save({ filename: "gvia-backup-" + todayISO() + ".json", data: JSON.stringify(data, null, 1) });
+      toast("הגיבוי נשמר");
+      saveSettings({ lastBackup: todayISO() }).catch(() => {});
+    } catch (e) { if (e && e.code === "declined") return; toast("שמירת הגיבוי לא הצליחה. נסי שוב בעוד רגע."); }
+  }
+  let restoreData = null;
+  function readRestore(file) {
+    const box = $("#restore-box"); if (!box) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      let d = null;
+      try { d = JSON.parse(String(fr.result)); } catch (e) { d = null; }
+      const okId = (x) => x && typeof x.id === "string" && /^[A-Za-z0-9_\-.~:@+]{1,200}$/.test(x.id) && x.id !== "." && x.id !== "..";
+      if (!d || d.app !== "gvia" || !Array.isArray(d.patients) || !Array.isArray(d.sessions) || !d.patients.every(okId) || !d.sessions.every(okId)) {
+        restoreData = null; box.hidden = false;
+        box.innerHTML = '<div class="banner">הקובץ הזה אינו קובץ גיבוי של יומן הגבייה. בחרי קובץ שנשמר בכפתור „הורדת גיבוי מלא”.</div>';
+        return;
+      }
+      restoreData = d;
+      box.hidden = false;
+      box.innerHTML = '<div class="confirm" style="background:var(--accent-soft);color:var(--accent)">בקובץ יש ' + d.patients.length + " מטופלות ו-" + d.sessions.length + " פגישות, מגיבוי מ-" + (d.exportedAt ? fmtDate(d.exportedAt.slice(0, 10)) : "תאריך לא ידוע") + ". רשומות עם אותו מזהה יוחלפו בגרסה מהגיבוי; רשומות שאינן בגיבוי יישארו כמו שהן." +
+        ' <button type="button" class="btn small primary" id="restore-go">שחזור הנתונים</button></div><p class="note" id="restore-prog"></p>';
+    };
+    fr.readAsText(file);
+  }
+  async function doRestore() {
+    const d = restoreData; if (!d) return;
+    const go = $("#restore-go"); if (go) go.disabled = true;
+    const prog = $("#restore-prog");
+    const all = d.patients.map((p) => ["patients", p]).concat(d.sessions.map((s) => ["sessions", s]));
+    try {
+      if (d.settings && typeof d.settings === "object") await saveSettings(d.settings);
+      for (let i = 0; i < all.length; i++) {
+        const [col, rec] = all[i]; const body = Object.assign({}, rec); delete body.id;
+        await setDoc(col, rec.id, body);
+        if (prog && (i % 10 === 0 || i === all.length - 1)) prog.textContent = "שוחזרו " + (i + 1) + " מתוך " + all.length + "…";
+      }
+      restoreData = null;
+      toast("השחזור הושלם: " + d.patients.length + " מטופלות ו-" + d.sessions.length + " פגישות");
+      render();
+    } catch (e) { if (go) go.disabled = false; if (prog) prog.textContent = "השחזור נעצר באמצע. אפשר ללחוץ שוב כדי להשלים אותו."; }
+  }
+
   // ---------- export ----------
   function csv(rows) { return "﻿" + rows.map((r) => r.map((c) => { const s = String(c == null ? "" : c); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(",")).join("\r\n"); }
   function inRange(iso, range) { if (!iso) return false; if (range === "all") return true; if (range === "year") return iso.slice(0, 4) === S.month.slice(0, 4); return ymOf(iso) === S.month; }
@@ -1260,7 +1659,15 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
   $$(".tabs button").forEach((b) => b.addEventListener("click", () => { S.tab = b.dataset.tab; try { localStorage.setItem("gvia-tab", S.tab); } catch (e) { /* ignore */ } render(); }));
 
   $("#view").addEventListener("click", async (e) => {
+    if (suppressClick) { suppressClick = false; return; }
     const t = e.target;
+    const evx = t.closest("[data-ev]"); if (evx) { if (popFor === evx.dataset.ev) closePop(); else openPop(evx.dataset.ev, evx); return; }
+    const rmd = t.closest("[data-remind]"); if (rmd) { openReminder(rmd.dataset.remind); return; }
+    if (t.closest("#go-backup")) { S.tab = "settings"; render(); const b = $("#backup-dl"); if (b) b.scrollIntoView({ block: "center" }); return; }
+    if (t.closest("#backup-dl")) { doBackup(); return; }
+    if (t.closest("#restore-go")) { doRestore(); return; }
+    if (t.closest("#save-remind")) { try { await saveSettings({ remindText: $("#set-remind").value.trim() }); toast("נוסח התזכורת נשמר"); } catch (err) { /* reported */ } return; }
+    if (t.closest("#reset-remind")) { $("#set-remind").value = DEFAULT_REMIND; return; }
     const qp = t.closest("[data-qp]"); if (qp) { quickPay(qp.dataset.qp, qp.dataset.m); return; }
     const pp = t.closest("[data-pay-patient]"); if (pp) { openPayPatient(pp.dataset.payPatient); return; }
     const op = t.closest("[data-open-patient]"); if (op) { openPatient(op.dataset.openPatient); return; }
@@ -1287,20 +1694,23 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     if (t.closest("#save-settings")) {
       const price = Number($("#set-price").value);
       if (!(price >= 0)) { toast("המחיר צריך להיות מספר."); return; }
-      try { await queueWrite("settings/main", () => S.db.doc("settings/main").set({ clinicName: $("#set-name").value.trim(), defaultPrice: price, dayStart: Number($("#set-start").value), dayEnd: Math.max(Number($("#set-end").value), Number($("#set-start").value) + 1), sessionLength: Number($("#set-len").value) || 50 })).catch(writeErr); toast("ההגדרות נשמרו"); } catch (err) { /* reported */ }
+      try { await saveSettings({ clinicName: $("#set-name").value.trim(), defaultPrice: price, dayStart: Number($("#set-start").value), dayEnd: Math.max(Number($("#set-end").value), Number($("#set-start").value) + 1), sessionLength: Number($("#set-len").value) || 50 }); toast("ההגדרות נשמרו"); } catch (err) { /* reported */ }
       return;
     }
     const ce = t.closest("#clear-examples");
     if (ce) { ce.outerHTML = '<div class="confirm">למחוק את כל נתוני הדוגמה? הנתונים שלך לא יימחקו. <button type="button" class="btn small danger" id="clear-examples2">כן, למחוק</button></div>'; return; }
     if (t.closest("#clear-examples2")) {
       try {
-        for (const s of Array.from(S.sessions.values()).filter(isExampleSession)) await delDoc("sessions", s.id);
-        for (const p of Array.from(S.patients.values()).filter((x) => x.example)) await delDoc("patients", p.id);
-        toast("נתוני הדוגמה נמחקו");
+        const ss = Array.from(S.sessions.values()).filter(isExampleSession).map((x) => [x.id, plain(x)]);
+        const ps = Array.from(S.patients.values()).filter((x) => x.example).map((x) => { const c = Object.assign({}, x); delete c.id; return [x.id, c]; });
+        for (const [id] of ss) await delDoc("sessions", id);
+        for (const [id] of ps) await delDoc("patients", id);
+        toast("נתוני הדוגמה נמחקו", async () => { for (const [id, c] of ps) await setDoc("patients", id, c); for (const [id, c] of ss) await setDoc("sessions", id, c); });
       } catch (err) { /* reported */ }
     }
   });
   $("#view").addEventListener("change", (e) => {
+    if (e.target.id === "restore-file" && e.target.files && e.target.files[0]) { readRestore(e.target.files[0]); e.target.value = ""; return; }
     if (e.target.id === "s-patient") { S.patientFilter = e.target.value; render(); }
   });
   $("#view").addEventListener("input", (e) => {
@@ -1310,6 +1720,8 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const box = $("#pts-body"); if (box) box.innerHTML = patientsTable(all, new Map(all.map((p) => [p.id, patientSummary(p.id)])));
   });
   $("#view").addEventListener("keydown", (e) => {
+    const evk = e.target.closest && e.target.closest("[data-ev]");
+    if (evk && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); e.stopPropagation(); openPop(evk.dataset.ev, evk); return; }
     const d = e.target.closest && e.target.closest("[data-day]");
     if (d && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); S.selDay = d.dataset.day; render(); const el = $('[data-day="' + S.selDay + '"]'); if (el) el.focus(); }
   });
@@ -1345,7 +1757,7 @@ dialog::backdrop { background: rgba(15, 20, 30, .45); }
     const onErr = () => { toast("החיבור לנתונים נקטע. רענני את הדף."); };
     db.doc("settings/main").onSnapshot((snap) => {
       const d = snap.exists ? snap.data() : {};
-      S.settings = { clinicName: d.clinicName || "", defaultPrice: d.defaultPrice != null ? d.defaultPrice : 400, dayStart: d.dayStart != null ? d.dayStart : 8, dayEnd: d.dayEnd != null ? d.dayEnd : 21, sessionLength: d.sessionLength || 50 };
+      S.settings = { clinicName: d.clinicName || "", defaultPrice: d.defaultPrice != null ? d.defaultPrice : 400, dayStart: d.dayStart != null ? d.dayStart : 8, dayEnd: d.dayEnd != null ? d.dayEnd : 21, sessionLength: d.sessionLength || 50, remindText: d.remindText || "", lastBackup: d.lastBackup || "" };
       mark("c");
     }, onErr);
     db.collection("patients").onSnapshot((snap) => {
